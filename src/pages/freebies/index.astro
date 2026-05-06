@@ -1,0 +1,22 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import FreebieCard from "../../components/FreebieCard.astro";
+---
+
+<BaseLayout title="Бесплатно" description="Бесплатные чек‑листы, шаблоны и гайды. Скачивайте без оплаты — в обмен на e‑mail.">
+  <section class="container-wide pt-12 md:pt-16">
+    <span class="badge-money">Бесплатно</span>
+    <h1 class="mt-3">Чек‑листы и шаблоны без оплаты</h1>
+    <p class="mt-4 max-w-2xl text-ink-muted">
+      Берите, читайте, пользуйтесь. В обмен мы попросим e‑mail — будем присылать новые материалы
+      и подсказки 1–2 раза в месяц. Отписаться можно в один клик.
+    </p>
+  </section>
+
+  <section class="container-wide pb-16 pt-8 md:pb-24">
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {(await getCollection("freebies")).map((f) => <FreebieCard freebie={f} />)}
+    </div>
+  </section>
+</BaseLayout>

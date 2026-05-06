@@ -1,0 +1,75 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ProductCard from "../../components/ProductCard.astro";
+import CTA from "../../components/CTA.astro";
+import { TRACKS } from "../../lib/site";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const track = TRACKS.services;
+
+const products = (await getCollection("products", ({ data }) => data.track === "services"))
+  .sort((a, b) => Number(b.data.featured) - Number(a.data.featured))
+  .slice(0, 6);
+
+const allCount = (await getCollection("products", ({ data }) => data.track === "services"))
+  .length;
+---
+
+<BaseLayout title={track.title} description={track.description}>
+  <section class="bg-pattern-lime">
+    <div class="container-wide py-16 md:py-24">
+      <span class="badge bg-black/5">{track.short}</span>
+      <h1 class="mt-3 max-w-3xl">
+        Услуги клиентам — <span class="bg-ink px-2 text-paper">по белому</span> и без бумажной паники
+      </h1>
+      <p class="mt-5 max-w-2xl text-lg">
+        Шаблоны договоров, чек‑листы регистрации, налоговые калькуляторы, скрипты переписки —
+        всё, что нужно мастеру, репетитору, консультанту, фрилансеру, ремонтнику.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href={`${base}/services/catalog/`} class="btn-primary">Открыть каталог →</a>
+        <a href={`${base}/freebies/`} class="btn-ghost">Сначала бесплатное</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="container-wide py-12 md:py-16">
+    <div class="grid gap-8 md:grid-cols-3">
+      <div>
+        <div class="font-mono text-xs uppercase tracking-widest text-ink-muted">01</div>
+        <h3 class="mt-2">Только начинаете</h3>
+        <p class="mt-2 text-ink-muted">Регистрация самозанятого/ИП, первый договор, формирование чеков в «Мой налог».</p>
+      </div>
+      <div>
+        <div class="font-mono text-xs uppercase tracking-widest text-ink-muted">02</div>
+        <h3 class="mt-2">Растёте в потоке</h3>
+        <p class="mt-2 text-ink-muted">CRM в Notion, скрипты переписки, шаблоны КП, поднятие чека без потери клиентов.</p>
+      </div>
+      <div>
+        <div class="font-mono text-xs uppercase tracking-widest text-ink-muted">03</div>
+        <h3 class="mt-2">Хотите бренд</h3>
+        <p class="mt-2 text-ink-muted">Личный бренд эксперта в Telegram, контент‑планы, монетизация подписчиков.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="container-wide py-8 md:py-16">
+    <div class="mb-8 flex items-end justify-between gap-4">
+      <div>
+        <span class="badge">Каталог · {allCount} продуктов</span>
+        <h2 class="mt-2">Что есть для самозанятых и ИП</h2>
+      </div>
+      <a class="btn-ghost hidden md:inline-flex" href={`${base}/services/catalog/`}>Открыть весь каталог →</a>
+    </div>
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {products.map((p) => <ProductCard product={p} />)}
+    </div>
+  </section>
+
+  <CTA
+    title="Не знаете, с какого продукта начать?"
+    text="Скачайте бесплатно «Гайд по регистрации самозанятого за 1 час» — там есть все шаги."
+    primaryLabel="Скачать гайд"
+  />
+</BaseLayout>

@@ -1,0 +1,45 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ProductCard from "../../components/ProductCard.astro";
+
+const products = (await getCollection("products"))
+  .sort((a, b) => Number(b.data.featured) - Number(a.data.featured));
+---
+
+<BaseLayout title="Все продукты" description="Полный каталог цифровых продуктов: маркетплейсы и услуги.">
+  <section class="container-wide pt-12 md:pt-16">
+    <span class="badge">Все категории</span>
+    <h1 class="mt-3">Все цифровые продукты</h1>
+    <p class="mt-4 max-w-2xl text-ink-muted">
+      {products.length} продуктов в двух направлениях: «Маркетплейсы» и «Самозанятые / ИП».
+    </p>
+    <div class="mt-6 flex flex-wrap gap-2">
+      <button class="badge bg-ink/5 hover:bg-ink hover:text-paper transition-colors" data-filter="all">Все</button>
+      <button class="badge bg-ink/5 hover:bg-ink hover:text-paper transition-colors" data-filter="marketplace">Маркетплейсы</button>
+      <button class="badge bg-ink/5 hover:bg-ink hover:text-paper transition-colors" data-filter="services">Самозанятые / ИП</button>
+    </div>
+  </section>
+
+  <section class="container-wide pb-16 pt-8 md:pb-24">
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {products.map((p) => (
+        <div data-track={p.data.track}>
+          <ProductCard product={p} />
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <script is:inline>
+    document.querySelectorAll("[data-filter]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const f = btn.getAttribute("data-filter");
+        document.querySelectorAll("[data-track]").forEach((card) => {
+          const t = card.getAttribute("data-track");
+          card.style.display = (f === "all" || t === f) ? "" : "none";
+        });
+      });
+    });
+  </script>
+</BaseLayout>

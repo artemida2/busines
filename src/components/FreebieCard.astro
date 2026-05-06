@@ -1,0 +1,36 @@
+---
+import type { CollectionEntry } from "astro:content";
+import PatternBg from "./PatternBg.astro";
+
+export interface Props {
+  freebie: CollectionEntry<"freebies">;
+}
+
+const { freebie } = Astro.props;
+const { data, slug } = freebie;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const href = `${base}/freebies/${slug}/`;
+---
+
+<a href={href} class="group block focus:outline-none">
+  <PatternBg pattern={data.pattern} class="group-hover:shadow-card">
+    <div class="flex items-center justify-between gap-3">
+      <span class="badge bg-black/5 backdrop-blur">Бесплатно</span>
+      <span class="badge bg-black/5 backdrop-blur">{data.format}</span>
+    </div>
+
+    <div class="mt-6">
+      <h3 class="font-display text-2xl font-extrabold leading-[1.15] md:text-3xl">
+        {data.title}
+      </h3>
+      <p class="mt-3 text-sm/relaxed opacity-80">{data.summary}</p>
+    </div>
+
+    <div class="mt-6 flex items-center justify-between">
+      <span class="text-sm font-medium">Скачать →</span>
+      {data.pages ? (
+        <span class="font-mono text-xs opacity-70">{data.pages} стр.</span>
+      ) : null}
+    </div>
+  </PatternBg>
+</a>

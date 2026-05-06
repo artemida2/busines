@@ -1,0 +1,70 @@
+---
+import { TRACKS, SITE } from "../lib/site";
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+const steps = [
+  { n: "01", title: "Выбираете продукт", desc: "Каталог разделён на две вертикали и фильтры." },
+  { n: "02", title: "Оплачиваете онлайн", desc: "ЮKassa: карта, СБП, СберPay. Чек 54‑ФЗ автоматически." },
+  { n: "03", title: "Файл — на e‑mail", desc: "Письмо со ссылкой приходит сразу после оплаты." },
+  { n: "04", title: "Внедряете", desc: "Каждый продукт — с инструкцией, что делать по шагам." },
+];
+---
+
+<section class="relative overflow-hidden">
+  <div class="container-wide py-16 md:py-24">
+    <div class="grid items-end gap-10 md:grid-cols-12">
+      <div class="md:col-span-8">
+        <span class="badge-brand">Цифровые продукты · Доставка в течение 1 минуты</span>
+        <h1 class="mt-4">
+          Запускайте бизнес <span class="bg-pattern-lime px-2">по делу</span>,
+          без курсов <span class="text-ink-muted">«за миллион».</span>
+        </h1>
+        <p class="mt-5 max-w-2xl text-lg text-ink-muted">
+          {SITE.tagline}. Готовые шаблоны, чек‑листы и таблицы — без воды,
+          с пометками «куда нажать» и «что писать».
+        </p>
+      </div>
+
+      <div class="md:col-span-4">
+        <div class="rounded-card border border-ink/10 bg-paper p-6 shadow-card">
+          <div class="font-mono text-xs uppercase tracking-widest text-ink-muted">
+            Что подходит вам?
+          </div>
+          <div class="mt-3 space-y-3">
+            <a
+              href={`${base}/${TRACKS.marketplace.slug}/`}
+              class="group flex items-center justify-between rounded-2xl bg-pattern-sky p-4 transition hover:-translate-y-0.5"
+            >
+              <span>
+                <span class="block text-xs font-mono uppercase tracking-wider opacity-70">01</span>
+                <span class="block font-display text-lg font-extrabold">{TRACKS.marketplace.title}</span>
+              </span>
+              <span class="text-xl">→</span>
+            </a>
+            <a
+              href={`${base}/${TRACKS.services.slug}/`}
+              class="group flex items-center justify-between rounded-2xl bg-pattern-lime p-4 transition hover:-translate-y-0.5"
+            >
+              <span>
+                <span class="block text-xs font-mono uppercase tracking-wider opacity-70">02</span>
+                <span class="block font-display text-lg font-extrabold">{TRACKS.services.title}</span>
+              </span>
+              <span class="text-xl">→</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Лента «как всё работает» -->
+    <div class="mt-12 grid gap-3 md:grid-cols-4">
+      {steps.map((s) => (
+        <div class="rounded-2xl border border-ink/10 p-5">
+          <div class="font-mono text-xs uppercase tracking-widest text-ink-muted">{s.n}</div>
+          <div class="mt-2 font-display text-lg font-bold">{s.title}</div>
+          <div class="mt-1 text-sm text-ink-muted">{s.desc}</div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

@@ -1,0 +1,75 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ProductCard from "../../components/ProductCard.astro";
+import CTA from "../../components/CTA.astro";
+import { TRACKS } from "../../lib/site";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const track = TRACKS.marketplace;
+
+const products = (await getCollection("products", ({ data }) => data.track === "marketplace"))
+  .sort((a, b) => Number(b.data.featured) - Number(a.data.featured))
+  .slice(0, 6);
+
+const allCount = (await getCollection("products", ({ data }) => data.track === "marketplace")).length;
+---
+
+<BaseLayout
+  title={track.title}
+  description={track.description}
+>
+  <section class="bg-pattern-sky">
+    <div class="container-wide py-16 md:py-24">
+      <span class="badge bg-black/5">{track.short}</span>
+      <h1 class="mt-3 max-w-3xl">Запуск на маркетплейсах <span class="bg-ink px-2 text-paper">по шагам</span></h1>
+      <p class="mt-5 max-w-2xl text-lg">
+        Готовая «сетка» для тех, кто только выбирает нишу, и для тех, кто уже на полках, но
+        упирается в юнит‑экономику и продвижение.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href={`${base}/marketplace/catalog/`} class="btn-primary">Открыть каталог →</a>
+        <a href={`${base}/freebies/`} class="btn-ghost">Сначала бесплатное</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="container-wide py-12 md:py-16">
+    <div class="grid gap-8 md:grid-cols-3">
+      <div>
+        <div class="font-mono text-xs uppercase tracking-widest text-ink-muted">01</div>
+        <h3 class="mt-2">Стартуете с нуля</h3>
+        <p class="mt-2 text-ink-muted">Гайды по выбору ниши, регистрации, юнит‑экономике и первым 30 дням.</p>
+      </div>
+      <div>
+        <div class="font-mono text-xs uppercase tracking-widest text-ink-muted">02</div>
+        <h3 class="mt-2">Уже продаёте</h3>
+        <p class="mt-2 text-ink-muted">Шаблоны карточек, SEO‑заголовки, скрипты ответов на отзывы и работа с возвратами.</p>
+      </div>
+      <div>
+        <div class="font-mono text-xs uppercase tracking-widest text-ink-muted">03</div>
+        <h3 class="mt-2">Считаете деньги</h3>
+        <p class="mt-2 text-ink-muted">Excel/Sheets таблицы для расчёта рентабельности по SKU, поставке, акциям и комиссиям.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="container-wide py-8 md:py-16">
+    <div class="mb-8 flex items-end justify-between gap-4">
+      <div>
+        <span class="badge">Каталог · {allCount} продуктов</span>
+        <h2 class="mt-2">Что есть в направлении «Маркетплейсы»</h2>
+      </div>
+      <a class="btn-ghost hidden md:inline-flex" href={`${base}/marketplace/catalog/`}>Открыть весь каталог →</a>
+    </div>
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {products.map((p) => <ProductCard product={p} />)}
+    </div>
+  </section>
+
+  <CTA
+    title="Не уверены, какой продукт нужен именно вам?"
+    text="Получите бесплатно «Чек‑лист запуска на WB за 30 дней» — он подскажет, с чего начать."
+    primaryLabel="Скачать чек-лист"
+  />
+</BaseLayout>

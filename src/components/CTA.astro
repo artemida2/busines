@@ -1,0 +1,42 @@
+---
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+export interface Props {
+  title?: string;
+  text?: string;
+  primaryHref?: string;
+  primaryLabel?: string;
+  secondaryHref?: string;
+  secondaryLabel?: string;
+}
+
+const {
+  title = "Не знаете, с чего начать?",
+  text = "Скачайте бесплатный чек‑лист — он подскажет, какой шаг для вас сейчас приоритетный.",
+  primaryHref = `${base}/freebies/`,
+  primaryLabel = "Получить бесплатно",
+  secondaryHref = `${base}/contacts/`,
+  secondaryLabel = "Написать автору",
+} = Astro.props;
+---
+
+<section class="container-wide py-16">
+  <div class="rounded-card bg-ink p-8 md:p-12">
+    <div class="grid items-center gap-8 md:grid-cols-12">
+      <div class="md:col-span-8">
+        <h2 class="text-paper">{title}</h2>
+        <p class="mt-3 max-w-2xl text-paper/70">{text}</p>
+      </div>
+      <div class="md:col-span-4">
+        <div class="flex flex-col gap-3">
+          <a href={primaryHref} class="btn bg-pattern-lime text-ink hover:bg-money hover:text-white">
+            {primaryLabel} →
+          </a>
+          <a href={secondaryHref} class="btn bg-transparent text-paper ring-1 ring-paper/30 hover:bg-paper hover:text-ink">
+            {secondaryLabel}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

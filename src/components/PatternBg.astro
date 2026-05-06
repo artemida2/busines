@@ -1,0 +1,57 @@
+---
+// Категорный «арт»-фон для карточек.
+// 6 паттернов = 2 направления × 3 акцента, чтобы каталог визуально дышал.
+
+export interface Props {
+  pattern:
+    | "lime"
+    | "coral"
+    | "mint"
+    | "sand"
+    | "graphite"
+    | "sky";
+  class?: string;
+}
+
+const { pattern, class: className = "" } = Astro.props;
+
+const map = {
+  lime: {
+    bg: "bg-pattern-lime",
+    text: "text-ink",
+    accent: "bg-ink text-pattern-lime",
+  },
+  coral: {
+    bg: "bg-pattern-coral",
+    text: "text-ink",
+    accent: "bg-ink text-pattern-coral",
+  },
+  mint: {
+    bg: "bg-pattern-mint",
+    text: "text-ink",
+    accent: "bg-ink text-pattern-mint",
+  },
+  sand: {
+    bg: "bg-pattern-sand",
+    text: "text-ink",
+    accent: "bg-ink text-pattern-sand",
+  },
+  graphite: {
+    bg: "bg-pattern-graphite",
+    text: "text-paper",
+    accent: "bg-pattern-lime text-ink",
+  },
+  sky: {
+    bg: "bg-pattern-sky",
+    text: "text-ink",
+    accent: "bg-ink text-pattern-sky",
+  },
+} as const;
+
+const styles = map[pattern];
+---
+
+<div class:list={["card-art", styles.bg, styles.text, className]}>
+  <slot />
+  <slot name="accent" />
+</div>

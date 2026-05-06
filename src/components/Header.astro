@@ -1,0 +1,56 @@
+---
+import { SITE } from "../lib/site";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+const nav = [
+  { href: `${base}/marketplace/`, label: "Маркетплейсы" },
+  { href: `${base}/services/`, label: "Самозанятым / ИП" },
+  { href: `${base}/freebies/`, label: "Бесплатно" },
+  { href: `${base}/blog/`, label: "Блог" },
+  { href: `${base}/faq/`, label: "FAQ" },
+];
+
+const path = Astro.url.pathname.replace(/\/$/, "");
+---
+
+<header class="sticky top-0 z-40 border-b border-ink/10 bg-paper/80 backdrop-blur">
+  <div class="container-wide flex h-16 items-center justify-between gap-4">
+    <a href={`${base}/`} class="flex items-center gap-2 font-display text-lg font-extrabold tracking-tight">
+      <span class="inline-flex h-8 w-8 items-center justify-center rounded-md bg-ink text-paper">⌥</span>
+      <span>{SITE.name}</span>
+    </a>
+
+    <nav aria-label="Главная навигация" class="hidden items-center gap-1 md:flex">
+      {nav.map((item) => {
+        const isActive = path === item.href.replace(/\/$/, "");
+        return (
+          <a
+            href={item.href}
+            class:list={[
+              "rounded-full px-3 py-2 text-sm font-medium",
+              isActive ? "bg-ink text-paper" : "text-ink-soft hover:bg-ink/5",
+            ]}
+          >
+            {item.label}
+          </a>
+        );
+      })}
+    </nav>
+
+    <div class="flex items-center gap-2">
+      <a href={`${base}/contacts/`} class="hidden md:inline-flex btn-ghost text-sm">Контакты</a>
+      <details class="relative md:hidden">
+        <summary class="btn-ghost cursor-pointer list-none text-sm" aria-label="Открыть меню">Меню</summary>
+        <div class="absolute right-0 top-12 w-64 rounded-2xl border border-ink/10 bg-paper p-3 shadow-card">
+          <nav class="flex flex-col gap-1">
+            {nav.map((item) => (
+              <a href={item.href} class="rounded-md px-3 py-2 text-sm hover:bg-ink/5">{item.label}</a>
+            ))}
+            <a href={`${base}/contacts/`} class="rounded-md px-3 py-2 text-sm hover:bg-ink/5">Контакты</a>
+          </nav>
+        </div>
+      </details>
+    </div>
+  </div>
+</header>

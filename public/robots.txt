@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /thanks/
+Disallow: /legal/
+
+Sitemap: https://artemida2.github.io/busines/sitemap-index.xml

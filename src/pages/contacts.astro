@@ -1,0 +1,54 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { SITE } from "../lib/site";
+---
+
+<BaseLayout title="Контакты" description="Связаться с нами: e‑mail, Telegram, реквизиты.">
+  <section class="container-page pt-12 md:pt-16">
+    <span class="badge">Контакты</span>
+    <h1 class="mt-3">Напишите нам</h1>
+    <p class="mt-4 text-lg text-ink-muted">
+      Отвечаем на e‑mail в рабочие дни в течение 24 часов. В Telegram — быстрее.
+    </p>
+
+    <div class="mt-10 grid gap-5 md:grid-cols-2">
+      <a href={`mailto:${SITE.email}`} class="rounded-card border border-ink/10 p-6 transition hover:-translate-y-0.5 hover:shadow-card">
+        <div class="font-mono text-xs uppercase tracking-widest text-ink-muted">E‑mail</div>
+        <div class="mt-2 font-display text-2xl font-extrabold">{SITE.email}</div>
+        <div class="mt-2 text-sm text-ink-muted">По всем вопросам, чекам, возвратам.</div>
+      </a>
+      <a href={SITE.telegram} class="rounded-card border border-ink/10 p-6 transition hover:-translate-y-0.5 hover:shadow-card">
+        <div class="font-mono text-xs uppercase tracking-widest text-ink-muted">Telegram</div>
+        <div class="mt-2 font-display text-2xl font-extrabold">@{SITE.telegram.split('/').pop()}</div>
+        <div class="mt-2 text-sm text-ink-muted">Канал и связь с автором — пишите в личку.</div>
+      </a>
+    </div>
+
+    <div class="mt-10 rounded-card bg-paper-tint p-6 md:p-8">
+      <h2 class="text-2xl">Реквизиты</h2>
+      <dl class="mt-4 grid gap-2 text-sm md:grid-cols-2">
+        <dt class="text-ink-muted">Юр. наименование</dt>
+        <dd>{SITE.legalName}</dd>
+        <dt class="text-ink-muted">ИНН</dt>
+        <dd class="font-mono">{SITE.inn}</dd>
+        <dt class="text-ink-muted">E‑mail</dt>
+        <dd>{SITE.email}</dd>
+      </dl>
+    </div>
+
+    <div class="mt-10 rounded-card border border-ink/10 p-6 md:p-8">
+      <h2 class="text-2xl">Форма обратной связи</h2>
+      <p class="mt-1 text-sm text-ink-muted">Сообщение придёт нам на почту.</p>
+      <form class="mt-6 grid gap-4" method="POST" action="https://formspree.io/f/your_form_id">
+        <input required type="text" name="name" placeholder="Ваше имя" class="rounded-xl border border-ink/15 bg-paper px-4 py-3 outline-none focus:border-brand" />
+        <input required type="email" name="email" placeholder="E‑mail" class="rounded-xl border border-ink/15 bg-paper px-4 py-3 outline-none focus:border-brand" />
+        <textarea required rows="5" name="message" placeholder="Сообщение" class="rounded-xl border border-ink/15 bg-paper px-4 py-3 outline-none focus:border-brand"></textarea>
+        <label class="flex items-start gap-2 text-xs text-ink-muted">
+          <input required type="checkbox" name="consent" class="mt-0.5" />
+          <span>Согласен с обработкой персональных данных по 152‑ФЗ.</span>
+        </label>
+        <button class="btn-primary justify-self-start" type="submit">Отправить</button>
+      </form>
+    </div>
+  </section>
+</BaseLayout>

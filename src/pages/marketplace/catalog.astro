@@ -1,0 +1,32 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ProductCard from "../../components/ProductCard.astro";
+import { TRACKS } from "../../lib/site";
+
+const products = (await getCollection("products", ({ data }) => data.track === "marketplace"))
+  .sort((a, b) => Number(b.data.featured) - Number(a.data.featured));
+
+const formats = Array.from(new Set(products.map((p) => p.data.format)));
+---
+
+<BaseLayout title="Каталог: Маркетплейсы" description="Все цифровые продукты для продавцов на маркетплейсах: гайды, шаблоны, таблицы юнит‑экономики.">
+  <section class="container-wide pb-6 pt-12 md:pt-16">
+    <span class="badge">{TRACKS.marketplace.short}</span>
+    <h1 class="mt-3">Каталог: Маркетплейсы</h1>
+    <p class="mt-4 max-w-2xl text-ink-muted">
+      Подобрано для тех, кто запускается с нуля, и тех, кто уже на полках. Все продукты — в формате,
+      который можно открыть на телефоне и применять сразу.
+    </p>
+    <div class="mt-6 flex flex-wrap gap-2">
+      <span class="badge">Всего: {products.length}</span>
+      {formats.map((f) => <span class="badge">{f}</span>)}
+    </div>
+  </section>
+
+  <section class="container-wide pb-16 pt-6 md:pb-24">
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {products.map((p) => <ProductCard product={p} />)}
+    </div>
+  </section>
+</BaseLayout>
