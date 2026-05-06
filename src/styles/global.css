@@ -89,6 +89,19 @@
            min-h-[260px] rounded-card p-6 md:p-7
            transition-transform duration-200 hover:-translate-y-0.5;
   }
+  .arrow-pill {
+    @apply inline-flex h-10 w-10 items-center justify-center rounded-full
+           bg-ink text-paper transition-transform group-hover:translate-x-1;
+  }
+  /* Тёмная (graphite) карточка → инвертируем светлые элементы поверх */
+  .bg-pattern-graphite .badge,
+  .bg-pattern-graphite .badge-brand,
+  .bg-pattern-graphite .badge-money {
+    @apply bg-white/10 text-paper;
+  }
+  .bg-pattern-graphite .arrow-pill {
+    @apply bg-pattern-lime text-ink;
+  }
 
   /* Типографика длинных текстов (блог, оферта, политика) ----------------- */
   .prose-editorial {
