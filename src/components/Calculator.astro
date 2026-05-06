@@ -17,6 +17,8 @@ const mpEntries = (Object.entries(commissions.marketplaces) as [
   MarketplaceSlug,
   (typeof commissions.marketplaces)[MarketplaceSlug]
 ][]).map(([slug, m]) => ({ slug, name: m.name }));
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 ---
 
 <section
@@ -210,15 +212,15 @@ const mpEntries = (Object.entries(commissions.marketplaces) as [
 
       <!-- Pro upsell -->
       <a
-        href="#pro"
+        href={`${base}/products/calc-pro-year/`}
         class="block rounded-card bg-pattern-lime p-4 transition-transform hover:-translate-y-0.5"
       >
         <div class="flex items-center gap-3">
           <span class="font-mono text-xs uppercase tracking-wider">Pro</span>
-          <span class="font-display text-lg font-extrabold">Сравнение SKU, импорт CSV, подписка на алерты</span>
+          <span class="font-display text-lg font-extrabold">Сравнение SKU, импорт CSV, алерты</span>
         </div>
         <p class="mt-1 text-sm text-ink-soft">
-          От 490 ₽/мес. Excel‑таблица с автозаполнением — в подарок Pro‑подписчикам.
+          От 2 990 ₽/год. Excel‑таблица с автозаполнением — в подарок Pro‑покупателям.
         </p>
       </a>
     </div>

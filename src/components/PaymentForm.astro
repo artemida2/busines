@@ -1,0 +1,193 @@
+---
+import { formatPrice, paymentEndpoint, PAYMENTS } from "../lib/site";
+
+export interface Props {
+  /** Slug продукта в каталоге */
+  slug: string;
+  /** Цена в рублях, для отображения и контроля */
+  price: number;
+  /** Заголовок продукта (для подписи кнопки и метрик) */
+  title?: string;
+}
+
+const { slug, price, title = "" } = Astro.props;
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const endpoint = paymentEndpoint();
+---
+
+<form
+  class="space-y-3"
+  data-payment-form
+  data-product-slug={slug}
+  data-product-price={price}
+  data-product-title={title}
+  data-endpoint={endpoint}
+  data-project={PAYMENTS.projectId}
+  data-support-email={PAYMENTS.supportEmail}
+  data-base={base}
+  novalidate
+>
+  <label class="block">
+    <span class="text-xs font-medium text-ink-muted">Email для доставки и чека</span>
+    <input
+      type="email"
+      name="email"
+      required
+      autocomplete="email"
+      placeholder="you@example.com"
+      class="mt-1 w-full rounded-lg border border-ink/15 bg-paper px-3 py-2.5 text-sm font-mono outline-none focus:border-brand"
+    />
+  </label>
+
+  <label class="flex items-start gap-2 text-[11px] leading-snug text-ink-muted">
+    <input
+      type="checkbox"
+      name="agreement"
+      required
+      class="mt-0.5 h-4 w-4 shrink-0 rounded border-ink/30 text-brand"
+    />
+    <span>
+      Согласен с
+      <a href={`${base}/legal/offer/`} class="underline hover:text-brand">публичной офертой</a>
+      и
+      <a href={`${base}/legal/privacy/`} class="underline hover:text-brand">политикой обработки данных</a>
+      (152‑ФЗ)
+    </span>
+  </label>
+
+  <button type="submit" class="btn-money w-full disabled:opacity-60" data-payment-submit>
+    <span data-payment-submit-default>Перейти к оплате — {formatPrice(price)}</span>
+    <span data-payment-submit-loading class="hidden">Готовим оплату…</span>
+  </button>
+
+  <p
+    class="hidden rounded-md bg-pattern-coral/60 p-3 text-xs text-ink"
+    data-payment-error
+    role="alert"
+  ></p>
+
+  <p class="text-[11px] leading-snug text-ink-muted">
+    Оплата картой или СБП через ЮKassa. Чек 54‑ФЗ автоматически. Файл придёт на указанный e‑mail
+    сразу после оплаты. Если письмо не пришло за 10 минут — напиши на
+    <a href={`mailto:${PAYMENTS.supportEmail}`} class="underline hover:text-brand">
+      {PAYMENTS.supportEmail}
+    </a>.
+  </p>
+</form>
+
+<script>
+  type CreateResponse = {
+    confirmation_url?: string;
+    payment_id?: string;
+    status?: string;
+    error?: string;
+  };
+
+  function uuid(): string {
+    if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+      return crypto.randomUUID();
+    }
+    // Fallback UUID v4 for very old browsers
+    return "xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === "x" ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
+
+  function init(form: HTMLFormElement) {
+    const slug = form.dataset.productSlug || "";
+    const price = Number(form.dataset.productPrice || "0");
+    const project = form.dataset.project || "delaydelo";
+    const endpoint = form.dataset.endpoint || "";
+    const supportEmail = form.dataset.supportEmail || "";
+
+    const submitBtn = form.querySelector<HTMLButtonElement>("[data-payment-submit]");
+    const defaultLbl = form.querySelector<HTMLElement>("[data-payment-submit-default]");
+    const loadingLbl = form.querySelector<HTMLElement>("[data-payment-submit-loading]");
+    const errorBox = form.querySelector<HTMLElement>("[data-payment-error]");
+
+    const setLoading = (loading: boolean) => {
+      if (submitBtn) submitBtn.disabled = loading;
+      if (defaultLbl) defaultLbl.classList.toggle("hidden", loading);
+      if (loadingLbl) loadingLbl.classList.toggle("hidden", !loading);
+    };
+
+    const showError = (msg: string) => {
+      if (!errorBox) return;
+      errorBox.textContent = msg;
+      errorBox.classList.remove("hidden");
+    };
+
+    const clearError = () => {
+      if (errorBox) errorBox.classList.add("hidden");
+    };
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      clearError();
+
+      const fd = new FormData(form);
+      const email = (fd.get("email") || "").toString().trim();
+      const agreement = fd.get("agreement");
+
+      if (!email || !/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email)) {
+        showError("Похоже, в e‑mail опечатка. Проверь и попробуй ещё раз.");
+        return;
+      }
+      if (!agreement) {
+        showError("Чтобы продолжить, нужно согласие с офертой и политикой обработки данных.");
+        return;
+      }
+      if (!endpoint) {
+        showError("Платёжный шлюз ещё не настроен. Напиши нам на почту, отправим вручную.");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            project,
+            guide_slug: slug,
+            email,
+            price_kopeks_check: price * 100, // защита от подмены цены клиентом
+            idempotence_key: uuid(),
+            source_url: window.location.href,
+          }),
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
+        const data = (await res.json()) as CreateResponse;
+        if (!data.confirmation_url) {
+          throw new Error(data.error || "Не получили ссылку на оплату от ЮKassa");
+        }
+
+        // Сохраняем slug на случай, если пользователь вернётся на /thanks/<slug>/
+        try {
+          sessionStorage.setItem("dd:lastPaymentSlug", slug);
+        } catch {}
+
+        window.location.href = data.confirmation_url;
+      } catch (err) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : "Что-то пошло не так. Попробуй ещё раз через минуту.";
+        const tail = supportEmail ? ` Если не получится — напиши на ${supportEmail}.` : "";
+        showError(`Ошибка: ${message}.${tail}`);
+        setLoading(false);
+      }
+    });
+  }
+
+  document
+    .querySelectorAll<HTMLFormElement>("[data-payment-form]")
+    .forEach((form) => init(form));
+</script>

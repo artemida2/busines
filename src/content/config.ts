@@ -19,6 +19,7 @@ const productFormat = z.enum([
   "Video",
   "Bundle",
   "Template",
+  "Access",
 ]);
 
 const products = defineCollection({

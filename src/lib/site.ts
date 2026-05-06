@@ -12,6 +12,27 @@ export const SITE = {
   legalName: "ИП / Самозанятый «Делай Дело»",
 } as const;
 
+/**
+ * Конфигурация платёжного шлюза.
+ * Все значения можно переопределить через PUBLIC_* env-переменные при сборке —
+ * см. astro.config.mjs / GitHub Actions secrets.
+ */
+export const PAYMENTS = {
+  /** Базовый URL n8n. Например: https://ai-konfu-u70272.vm.elestio.app */
+  n8nBaseUrl:
+    import.meta.env.PUBLIC_N8N_BASE_URL ||
+    "https://ai-konfu-u70272.vm.elestio.app",
+  /** Путь webhook'а на n8n, который инициирует платёж в ЮKassa и возвращает confirmation_url */
+  createPaymentPath: "/webhook/delaydelo-create-payment",
+  /** Идентификатор проекта — кладём в metadata, чтобы единый n8n обслуживал несколько сайтов */
+  projectId: "delaydelo",
+  /** Контактный email для проблем с оплатой/доставкой (показываем в форме) */
+  supportEmail: "hello@example.com",
+} as const;
+
+export const paymentEndpoint = (): string =>
+  PAYMENTS.n8nBaseUrl.replace(/\/$/, "") + PAYMENTS.createPaymentPath;
+
 export const TRACKS = {
   marketplace: {
     slug: "marketplace",
