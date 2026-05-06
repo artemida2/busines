@@ -1,0 +1,425 @@
+---
+import { commissions } from "../lib/calc";
+import type { MarketplaceSlug } from "../lib/calc";
+
+export interface Props {
+  /** Маркетплейс для предзаполнения */
+  defaultMp?: MarketplaceSlug;
+  /** Категория для предзаполнения */
+  defaultCategory?: string;
+  /** Скрывать выбор маркетплейса/категории — для лендингов с фиксированной нишей */
+  lockMpAndCategory?: boolean;
+}
+
+const { defaultMp = "wb", defaultCategory = "odezhda", lockMpAndCategory = false } = Astro.props;
+
+const mpEntries = (Object.entries(commissions.marketplaces) as [
+  MarketplaceSlug,
+  (typeof commissions.marketplaces)[MarketplaceSlug]
+][]).map(([slug, m]) => ({ slug, name: m.name }));
+---
+
+<section
+  class="rounded-card border border-ink/10 bg-paper p-5 md:p-7"
+  data-calc-root
+  data-default-mp={defaultMp}
+  data-default-cat={defaultCategory}
+  data-locked={lockMpAndCategory ? "1" : "0"}
+>
+  <header class="mb-6 flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <p class="text-xs font-mono uppercase tracking-widest text-ink-muted">
+        Калькулятор юнит‑экономики
+      </p>
+      <h2 class="mt-1 font-display text-3xl font-extrabold tracking-tight md:text-4xl">
+        Считаем прибыль с одной единицы
+      </h2>
+      <p class="mt-2 max-w-xl text-sm text-ink-muted">
+        Заполните параметры — увидите чистую маржу, точку безубыточности, безопасную цену в акции и
+        светофоры по 5 критериям. Бесплатно, без регистрации.
+      </p>
+    </div>
+    <button
+      type="button"
+      class="btn btn-ghost text-xs"
+      data-calc-share
+      title="Скопировать ссылку с текущими параметрами"
+    >
+      <span data-calc-share-label>Поделиться расчётом</span>
+    </button>
+  </header>
+
+  <div class="grid gap-6 md:grid-cols-[1fr_1fr]">
+    <!-- ============= INPUTS ============= -->
+    <form class="space-y-5" data-calc-form onsubmit="return false">
+      <div class="grid grid-cols-2 gap-3">
+        <label class="block">
+          <span class="text-xs font-medium text-ink-muted">Маркетплейс</span>
+          <select
+            class="mt-1 w-full rounded-lg border border-ink/15 bg-paper-tint px-3 py-2 font-mono text-sm disabled:opacity-60"
+            data-calc-mp
+            disabled={lockMpAndCategory}
+          >
+            {mpEntries.map(({ slug, name }) => (
+              <option value={slug} selected={slug === defaultMp}>{name}</option>
+            ))}
+          </select>
+        </label>
+        <label class="block">
+          <span class="text-xs font-medium text-ink-muted">Категория</span>
+          <select
+            class="mt-1 w-full rounded-lg border border-ink/15 bg-paper-tint px-3 py-2 font-mono text-sm disabled:opacity-60"
+            data-calc-cat
+            disabled={lockMpAndCategory}
+          ></select>
+        </label>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <label class="block">
+          <span class="text-xs font-medium text-ink-muted">Себестоимость, ₽</span>
+          <input
+            type="number"
+            step="1"
+            min="0"
+            class="mt-1 w-full rounded-lg border border-ink/15 bg-paper-tint px-3 py-2 font-mono text-sm"
+            data-calc-cost
+          />
+        </label>
+        <label class="block">
+          <span class="text-xs font-medium text-ink-muted">Розничная цена, ₽</span>
+          <input
+            type="number"
+            step="1"
+            min="0"
+            class="mt-1 w-full rounded-lg border border-ink/15 bg-paper-tint px-3 py-2 font-mono text-sm"
+            data-calc-sell
+          />
+        </label>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <label class="block">
+          <span class="text-xs font-medium text-ink-muted">Схема</span>
+          <select
+            class="mt-1 w-full rounded-lg border border-ink/15 bg-paper-tint px-3 py-2 font-mono text-sm"
+            data-calc-scheme
+          >
+            <option value="fbo">FBO (склад МП)</option>
+            <option value="fbs">FBS (свой склад)</option>
+          </select>
+        </label>
+        <label class="block">
+          <span class="text-xs font-medium text-ink-muted">Налог, %</span>
+          <select
+            class="mt-1 w-full rounded-lg border border-ink/15 bg-paper-tint px-3 py-2 font-mono text-sm"
+            data-calc-tax
+          >
+            <option value="0">0% — нет</option>
+            <option value="4">4% — НПД (физлицам)</option>
+            <option value="6" selected>6% — НПД юрлицам / УСН 6%</option>
+            <option value="15">15% — УСН Доходы минус расходы</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <label class="block">
+          <span class="text-xs font-medium text-ink-muted">% возвратов в твоей нише</span>
+          <input
+            type="number"
+            step="1"
+            min="0"
+            max="90"
+            class="mt-1 w-full rounded-lg border border-ink/15 bg-paper-tint px-3 py-2 font-mono text-sm"
+            data-calc-return
+          />
+          <span class="text-[11px] text-ink-muted" data-calc-return-hint></span>
+        </label>
+        <label class="block">
+          <span class="text-xs font-medium text-ink-muted">Заказов в месяц</span>
+          <input
+            type="number"
+            step="1"
+            min="0"
+            class="mt-1 w-full rounded-lg border border-ink/15 bg-paper-tint px-3 py-2 font-mono text-sm"
+            data-calc-volume
+          />
+        </label>
+      </div>
+
+      <label class="block">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-medium text-ink-muted">Скидка в акции, %</span>
+          <span class="font-mono text-xs" data-calc-promo-label>25%</span>
+        </div>
+        <input
+          type="range"
+          min="0"
+          max="70"
+          step="1"
+          class="mt-2 w-full accent-brand"
+          data-calc-promo
+        />
+      </label>
+
+      <p class="rounded-md bg-paper-tint p-3 text-xs text-ink-muted">
+        Ставки актуальны на <strong data-calc-version>{commissions.lastUpdated}</strong>.
+        {commissions.disclaimer}
+      </p>
+    </form>
+
+    <!-- ============= RESULT ============= -->
+    <div class="space-y-4" data-calc-result>
+      <!-- Headline -->
+      <div class="rounded-card bg-ink p-5 text-paper">
+        <div class="flex items-baseline justify-between gap-4">
+          <span class="text-xs font-mono uppercase text-paper/60">Чистая прибыль с единицы</span>
+          <span class="font-mono text-xs text-paper/60" data-calc-margin-pct>—</span>
+        </div>
+        <div class="mt-2 font-display text-4xl font-extrabold leading-none md:text-5xl" data-calc-net>
+          —
+        </div>
+        <div class="mt-3 text-xs text-paper/70" data-calc-net-explainer>
+          После комиссии, эквайринга, логистики, налога и заложенных возвратов.
+        </div>
+      </div>
+
+      <!-- Numbers grid -->
+      <dl class="grid grid-cols-2 gap-3 text-sm">
+        <div class="rounded-card bg-paper-tint p-3">
+          <dt class="text-xs text-ink-muted">Точка безубыточности</dt>
+          <dd class="mt-1 font-mono text-lg font-bold" data-calc-be>—</dd>
+        </div>
+        <div class="rounded-card bg-paper-tint p-3">
+          <dt class="text-xs text-ink-muted">Безопасная цена в акции</dt>
+          <dd class="mt-1 font-mono text-lg font-bold" data-calc-safe>—</dd>
+        </div>
+        <div class="rounded-card bg-paper-tint p-3">
+          <dt class="text-xs text-ink-muted">Выручка / месяц</dt>
+          <dd class="mt-1 font-mono text-lg font-bold" data-calc-revenue>—</dd>
+        </div>
+        <div class="rounded-card bg-paper-tint p-3">
+          <dt class="text-xs text-ink-muted">Чистыми / месяц</dt>
+          <dd class="mt-1 font-mono text-lg font-bold" data-calc-net-month>—</dd>
+        </div>
+      </dl>
+
+      <!-- Signals -->
+      <div class="space-y-2" data-calc-signals></div>
+
+      <!-- Pro upsell -->
+      <a
+        href="#pro"
+        class="block rounded-card bg-pattern-lime p-4 transition-transform hover:-translate-y-0.5"
+      >
+        <div class="flex items-center gap-3">
+          <span class="font-mono text-xs uppercase tracking-wider">Pro</span>
+          <span class="font-display text-lg font-extrabold">Сравнение SKU, импорт CSV, подписка на алерты</span>
+        </div>
+        <p class="mt-1 text-sm text-ink-soft">
+          От 490 ₽/мес. Excel‑таблица с автозаполнением — в подарок Pro‑подписчикам.
+        </p>
+      </a>
+    </div>
+  </div>
+</section>
+
+<script>
+  import {
+    calculate,
+    commissions,
+    decodeState,
+    encodeState,
+    defaultInputForCategory,
+    type CalcInput,
+    type MarketplaceSlug,
+  } from "../lib/calc";
+
+  function init(root: HTMLElement) {
+    const defaultMp = (root.dataset.defaultMp as MarketplaceSlug) || "wb";
+    const defaultCat = root.dataset.defaultCat || "odezhda";
+    const locked = root.dataset.locked === "1";
+
+    // ----- Read URL state if present -----
+    const url = new URL(window.location.href);
+    const encoded = url.searchParams.get("p");
+    let state: CalcInput =
+      (encoded && decodeState(encoded)) || defaultInputForCategory(defaultMp, defaultCat);
+
+    if (locked) {
+      // Принудительно используем категорию страницы
+      state.marketplace = defaultMp;
+      state.category = defaultCat;
+    }
+
+    const $ = <T extends Element = HTMLElement>(sel: string) =>
+      root.querySelector(sel) as T | null;
+
+    const mpSel = $<HTMLSelectElement>("[data-calc-mp]");
+    const catSel = $<HTMLSelectElement>("[data-calc-cat]");
+    const costInp = $<HTMLInputElement>("[data-calc-cost]");
+    const sellInp = $<HTMLInputElement>("[data-calc-sell]");
+    const schemeSel = $<HTMLSelectElement>("[data-calc-scheme]");
+    const taxSel = $<HTMLSelectElement>("[data-calc-tax]");
+    const returnInp = $<HTMLInputElement>("[data-calc-return]");
+    const returnHint = $<HTMLElement>("[data-calc-return-hint]");
+    const volumeInp = $<HTMLInputElement>("[data-calc-volume]");
+    const promoInp = $<HTMLInputElement>("[data-calc-promo]");
+    const promoLbl = $<HTMLElement>("[data-calc-promo-label]");
+    const shareBtn = $<HTMLButtonElement>("[data-calc-share]");
+    const shareLbl = $<HTMLElement>("[data-calc-share-label]");
+
+    // ----- Populate categories for current MP -----
+    function fillCats(mp: MarketplaceSlug, selected: string) {
+      if (!catSel) return;
+      const cats = commissions.marketplaces[mp]?.categories || {};
+      catSel.innerHTML = Object.entries(cats)
+        .map(
+          ([slug, c]) =>
+            `<option value="${slug}" ${slug === selected ? "selected" : ""}>${c.name}</option>`
+        )
+        .join("");
+    }
+
+    function applyState() {
+      if (mpSel) mpSel.value = state.marketplace;
+      fillCats(state.marketplace, state.category);
+      if (catSel) catSel.value = state.category;
+      if (costInp) costInp.value = String(state.costPrice);
+      if (sellInp) sellInp.value = String(state.sellPrice);
+      if (schemeSel) schemeSel.value = state.scheme;
+      if (taxSel) taxSel.value = String(state.taxRate);
+      if (returnInp) returnInp.value = String(state.expectedReturnRate);
+      if (volumeInp) volumeInp.value = String(state.monthlyVolume);
+      if (promoInp) promoInp.value = String(state.promoDiscountPct);
+      if (promoLbl) promoLbl.textContent = `${state.promoDiscountPct}%`;
+      const cat = commissions.marketplaces[state.marketplace]?.categories[state.category];
+      if (returnHint && cat) {
+        returnHint.textContent = `Среднее по категории: ${cat.returnRate}%`;
+      }
+      render();
+    }
+
+    // ----- Render result -----
+    function render() {
+      const r = calculate(state);
+      if (!r) return;
+
+      const fmt = (n: number) =>
+        new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(Math.round(n)) + " ₽";
+
+      const setText = (sel: string, t: string) => {
+        const el = root.querySelector(sel) as HTMLElement | null;
+        if (el) el.textContent = t;
+      };
+
+      setText("[data-calc-net]", fmt(r.netPerUnit));
+      setText("[data-calc-margin-pct]", `маржа ${r.marginPct.toFixed(1)}%`);
+      setText("[data-calc-be]", fmt(r.breakEvenPrice));
+      setText("[data-calc-safe]", fmt(r.safePromoPrice));
+      setText("[data-calc-revenue]", fmt(r.monthlyRevenue));
+      setText("[data-calc-net-month]", fmt(r.monthlyNet));
+
+      // Signals
+      const signalsRoot = root.querySelector("[data-calc-signals]") as HTMLElement | null;
+      if (signalsRoot) {
+        const colors: Record<string, string> = {
+          green: "bg-money/10 text-money-dark border-money/30",
+          yellow: "bg-pattern-sand text-ink border-ink/20",
+          red: "bg-pattern-coral text-ink border-ink/20",
+        };
+        const order: Array<keyof typeof r.signals> = [
+          "margin",
+          "logistics",
+          "returns",
+          "promo",
+          "turnover",
+        ];
+        signalsRoot.innerHTML = order
+          .map((k) => {
+            const s = r.signals[k];
+            return `
+              <div class="flex items-start gap-3 rounded-card border ${colors[s.level]} p-3">
+                <span class="mt-1 inline-block h-2.5 w-2.5 shrink-0 rounded-full ${
+                  s.level === "green" ? "bg-money" : s.level === "yellow" ? "bg-amber-500" : "bg-red-500"
+                }"></span>
+                <div>
+                  <div class="text-sm font-semibold">${s.label}</div>
+                  <div class="text-xs opacity-80">${s.hint}</div>
+                </div>
+              </div>`;
+          })
+          .join("");
+      }
+    }
+
+    // ----- Event wiring -----
+    mpSel?.addEventListener("change", () => {
+      state.marketplace = mpSel.value as MarketplaceSlug;
+      // При смене МП — категория может не существовать; берём первую
+      const cats = commissions.marketplaces[state.marketplace]?.categories || {};
+      state.category = Object.keys(cats)[0] || state.category;
+      applyState();
+    });
+    catSel?.addEventListener("change", () => {
+      state.category = catSel.value;
+      const cat = commissions.marketplaces[state.marketplace]?.categories[state.category];
+      if (cat) {
+        state.expectedReturnRate = cat.returnRate;
+        state.sellPrice = cat.averagePrice;
+        state.costPrice = Math.round(cat.averagePrice * 0.4);
+      }
+      applyState();
+    });
+
+    const numericHandler = (input: HTMLInputElement | null, key: keyof CalcInput) => {
+      input?.addEventListener("input", () => {
+        const n = Number(input.value);
+        if (!Number.isFinite(n)) return;
+        (state[key] as number) = n;
+        render();
+      });
+    };
+    numericHandler(costInp, "costPrice");
+    numericHandler(sellInp, "sellPrice");
+    numericHandler(returnInp, "expectedReturnRate");
+    numericHandler(volumeInp, "monthlyVolume");
+
+    schemeSel?.addEventListener("change", () => {
+      state.scheme = schemeSel.value as "fbo" | "fbs";
+      render();
+    });
+    taxSel?.addEventListener("change", () => {
+      state.taxRate = Number(taxSel.value);
+      render();
+    });
+    promoInp?.addEventListener("input", () => {
+      state.promoDiscountPct = Number(promoInp.value);
+      if (promoLbl) promoLbl.textContent = `${state.promoDiscountPct}%`;
+      render();
+    });
+
+    // ----- Share -----
+    shareBtn?.addEventListener("click", async () => {
+      const url = new URL(window.location.href);
+      url.searchParams.set("p", encodeState(state));
+      try {
+        await navigator.clipboard.writeText(url.toString());
+        if (shareLbl) {
+          const old = shareLbl.textContent;
+          shareLbl.textContent = "Скопировано в буфер";
+          setTimeout(() => {
+            if (shareLbl) shareLbl.textContent = old || "Поделиться расчётом";
+          }, 1500);
+        }
+      } catch {
+        window.prompt("Скопируйте ссылку:", url.toString());
+      }
+    });
+
+    applyState();
+  }
+
+  document.querySelectorAll("[data-calc-root]").forEach((el) => init(el as HTMLElement));
+</script>
