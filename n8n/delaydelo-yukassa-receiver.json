@@ -1,56 +1,33 @@
 {
-  "name": "Делай Дело — receive ЮKassa webhook + deliver",
+  "name": "Делай Дело — receiver subflow (вызов из существующего receiver Special English)",
   "nodes": [
     {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "delaydelo-yukassa",
-        "options": {}
-      },
-      "id": "dd-rx-1",
-      "name": "Webhook (from YooKassa)",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [-80, 800],
-      "webhookId": "delaydelo-yukassa"
+      "parameters": {},
+      "id": "dd-rx-trigger-manual",
+      "name": "Test: Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-160, 600],
+      "notes": "Только для ручных тестов в UI n8n. В production вход — через Execute Workflow Trigger ниже."
+    },
+    {
+      "parameters": {},
+      "id": "dd-rx-trigger-exec",
+      "name": "When called by another workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [-160, 800],
+      "notes": "Production вход. В существующем receiver Special English добавь Switch по metadata.project и для значения 'delaydelo' вызови этот sub-workflow через ноду 'Execute Workflow'. Передавай items[0] из Webhook (формат тот же, что приходит от ЮKassa)."
     },
     {
       "parameters": {
-        "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 1 },
-          "conditions": [
-            {
-              "id": "is-succeeded",
-              "leftValue": "={{ $json.body.event || $json.event }}",
-              "rightValue": "payment.succeeded",
-              "operator": { "type": "string", "operation": "equals" }
-            },
-            {
-              "id": "is-our-project",
-              "leftValue": "={{ ($json.body.object && $json.body.object.metadata && $json.body.object.metadata.project) || ($json.object && $json.object.metadata && $json.object.metadata.project) }}",
-              "rightValue": "delaydelo",
-              "operator": { "type": "string", "operation": "equals" }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "dd-rx-2",
-      "name": "Only payment.succeeded + delaydelo",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [144, 800]
-    },
-    {
-      "parameters": {
-        "functionCode": "// === Карта выдачи: slug → способ доставки ===\n// Заменить REPLACE_* на реальные значения после загрузки файлов в Google Drive\n// и подготовки страниц-инструкций / Notion-копий / шаблонов Google Sheets.\n//\n// deliveryType:\n//   'file' — n8n скачает файл из Google Drive и приложит к письму (для PDF/Excel/zip).\n//   'link' — n8n отправит письмо со ссылкой, без вложения\n//             (для Notion-шаблонов, Google Sheets-копий, активации Pro-доступа).\nconst MAP = {\n  'unit-economy-excel':      { deliveryType: 'file', fileId: 'REPLACE_FILE_ID_unit_economy_excel',  fileName: 'unit-economy-excel.xlsx', title: 'Юнит-экономика SKU для WB и Ozon' },\n  'wb-launch-30-days':       { deliveryType: 'file', fileId: 'REPLACE_FILE_ID_wb_launch_30_days',  fileName: 'wb-launch-30-days.pdf',   title: 'Запуск на Wildberries за 30 дней' },\n  'wb-card-templates':       { deliveryType: 'file', fileId: 'REPLACE_FILE_ID_wb_card_templates',  fileName: 'wb-card-templates.zip',   title: 'Шаблоны карточек WB' },\n  'self-employed-checklist': { deliveryType: 'file', fileId: 'REPLACE_FILE_ID_self_employed',      fileName: 'self-employed-checklist.pdf', title: 'Регистрация самозанятого за 1 час' },\n  'raise-price-scripts':     { deliveryType: 'file', fileId: 'REPLACE_FILE_ID_raise_price',        fileName: 'raise-price-scripts.pdf', title: 'Скрипты переписки: подъём цены' },\n  'contract-template':       { deliveryType: 'file', fileId: 'REPLACE_FILE_ID_contract_template', fileName: 'contract-template.zip',   title: 'Шаблон договора оказания услуг' },\n  'ozon-niche-matrix':       { deliveryType: 'link', shareUrl: 'REPLACE_GOOGLE_SHEETS_COPY_URL',                            title: 'Матрица ниш Ozon — Google Sheets' },\n  'notion-crm-master':       { deliveryType: 'link', shareUrl: 'REPLACE_NOTION_DUPLICATE_URL',                                title: 'CRM в Notion для мастера и фрилансера' },\n  'calc-pro-year':           { deliveryType: 'link', shareUrl: 'https://artemida2.github.io/busines/pro-access/?plan=year', title: 'Калькулятор Pro — годовой доступ' },\n  'calc-pro-lifetime':       { deliveryType: 'link', shareUrl: 'https://artemida2.github.io/busines/pro-access/?plan=lifetime', title: 'Калькулятор Pro — пожизненный доступ' }\n};\n\nconst body = items[0].json.body || items[0].json;\nconst object = (body && body.object) || {};\nconst metadata = object.metadata || {};\nconst slug = (metadata.guide_slug || '').toString();\nconst email = (metadata.email || (object.receipt && object.receipt.customer && object.receipt.customer.email) || '').toString().trim();\nconst paymentId = (object.id || '').toString();\nconst amount = object.amount || {};\n\nif (!slug || !MAP[slug]) {\n  throw new Error('Unknown or missing guide_slug in metadata: ' + slug);\n}\nif (!email) {\n  throw new Error('Missing email in metadata');\n}\n\nconst product = MAP[slug];\n\nreturn [{\n  json: {\n    guide_slug: slug,\n    email,\n    payment_id: paymentId,\n    amount_value: amount.value,\n    amount_currency: amount.currency,\n    title: product.title,\n    delivery_type: product.deliveryType,\n    fileId: product.fileId || '',\n    fileName: product.fileName || '',\n    shareUrl: product.shareUrl || ''\n  }\n}];"
+        "functionCode": "// === Карта выдачи: slug → способ доставки ===\n// Заменить REPLACE_* на реальные значения после загрузки файлов в Google Drive\n// и подготовки страниц-инструкций / Notion-копий / шаблонов Google Sheets.\n//\n// deliveryType:\n//   'file' — n8n скачает файл из Google Drive и приложит к письму (для PDF/Excel/zip).\n//   'link' — n8n отправит письмо со ссылкой, без вложения\n//             (для Notion-шаблонов, Google Sheets-копий, активации Pro-доступа).\nconst MAP = {\n  'unit-economy-excel':      { deliveryType: 'file', fileId: 'REPLACE_FILE_ID_unit_economy_excel',  fileName: 'unit-economy-excel.xlsx', title: 'Юнит-экономика SKU для WB и Ozon' },\n  'wb-launch-30-days':       { deliveryType: 'file', fileId: 'REPLACE_FILE_ID_wb_launch_30_days',  fileName: 'wb-launch-30-days.pdf',   title: 'Запуск на Wildberries за 30 дней' },\n  'wb-card-templates':       { deliveryType: 'file', fileId: 'REPLACE_FILE_ID_wb_card_templates',  fileName: 'wb-card-templates.zip',   title: 'Шаблоны карточек WB' },\n  'self-employed-checklist': { deliveryType: 'file', fileId: 'REPLACE_FILE_ID_self_employed',      fileName: 'self-employed-checklist.pdf', title: 'Регистрация самозанятого за 1 час' },\n  'raise-price-scripts':     { deliveryType: 'file', fileId: 'REPLACE_FILE_ID_raise_price',        fileName: 'raise-price-scripts.pdf', title: 'Скрипты переписки: подъём цены' },\n  'contract-template':       { deliveryType: 'file', fileId: 'REPLACE_FILE_ID_contract_template', fileName: 'contract-template.zip',   title: 'Шаблон договора оказания услуг' },\n  'ozon-niche-matrix':       { deliveryType: 'link', shareUrl: 'REPLACE_GOOGLE_SHEETS_COPY_URL_ozon_niche_matrix',  title: 'Матрица ниш Ozon' },\n  'notion-crm-master':       { deliveryType: 'link', shareUrl: 'REPLACE_NOTION_DUPLICATE_URL_notion_crm_master',     title: 'Notion CRM-шаблон' },\n  'calc-pro-year':           { deliveryType: 'link', shareUrl: 'REPLACE_PRO_ACCESS_URL_calc_pro_year',                title: 'Калькулятор Pro — годовой доступ' },\n  'calc-pro-lifetime':       { deliveryType: 'link', shareUrl: 'REPLACE_PRO_ACCESS_URL_calc_pro_lifetime',            title: 'Калькулятор Pro — пожизненный доступ' }\n};\n\n// === Извлекаем данные о платеже ===\n// Поддерживаем 3 формы входных данных:\n// 1) Прямо от Webhook (как у Special English): items[0].json = { body: { event, object } }\n// 2) Уже извлечённое body (если родительский workflow передал $json.body): items[0].json = { event, object }\n// 3) Прямо object (если родитель передал ровно тело уведомления): items[0].json = { id, status, metadata }\nconst raw = items[0].json || {};\nconst body = raw.body || raw;\nconst object = body.object || body;\nconst metadata = (object && object.metadata) || {};\n\n// На всякий случай отфильтруем чужие проекты (если родитель забыл это сделать).\nif (metadata.project && metadata.project !== 'delaydelo') {\n  // Возвращаем пустой массив — sub-workflow ничего не делает.\n  return [];\n}\n\nconst slug = (metadata.guide_slug || '').toString();\nconst email = (\n  metadata.email ||\n  (object.receipt && object.receipt.customer && object.receipt.customer.email) ||\n  ''\n).toString().trim();\nconst paymentId = (object.id || '').toString();\nconst amount = object.amount || {};\n\nif (!slug || !MAP[slug]) {\n  throw new Error('Unknown or missing guide_slug in metadata: ' + slug);\n}\nif (!email) {\n  throw new Error('Missing email in metadata');\n}\n\nconst product = MAP[slug];\nconst payload = {\n  guide_slug: slug,\n  email,\n  payment_id: paymentId,\n  amount_value: amount.value,\n  amount_currency: amount.currency,\n  delivery_type: product.deliveryType,\n  title: product.title\n};\n\nif (product.deliveryType === 'file') {\n  payload.fileId = product.fileId;\n  payload.fileName = product.fileName;\n} else {\n  payload.shareUrl = product.shareUrl;\n}\n\nreturn [{ json: payload }];"
       },
       "id": "dd-rx-3",
       "name": "Resolve slug → delivery",
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
-      "position": [384, 720]
+      "position": [80, 700]
     },
     {
       "parameters": {
@@ -72,7 +49,7 @@
       "name": "delivery_type = file?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [624, 720]
+      "position": [320, 700]
     },
     {
       "parameters": {
@@ -84,7 +61,7 @@
       "name": "Google Drive: download",
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
-      "position": [864, 640],
+      "position": [560, 620],
       "credentials": {
         "googleDriveOAuth2Api": {
           "id": "REPLACE_WITH_YOUR_DRIVE_CRED_ID",
@@ -108,7 +85,7 @@
       "name": "Gmail: send file",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
-      "position": [1104, 640],
+      "position": [800, 620],
       "webhookId": "dd-rx-gmail-file",
       "credentials": {
         "gmailOAuth2": {
@@ -128,7 +105,7 @@
       "name": "Gmail: send link",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
-      "position": [864, 800],
+      "position": [560, 800],
       "webhookId": "dd-rx-gmail-link",
       "credentials": {
         "gmailOAuth2": {
@@ -139,13 +116,11 @@
     }
   ],
   "connections": {
-    "Webhook (from YooKassa)": {
-      "main": [[{ "node": "Only payment.succeeded + delaydelo", "type": "main", "index": 0 }]]
+    "Test: Manual Trigger": {
+      "main": [[{ "node": "Resolve slug → delivery", "type": "main", "index": 0 }]]
     },
-    "Only payment.succeeded + delaydelo": {
-      "main": [
-        [{ "node": "Resolve slug → delivery", "type": "main", "index": 0 }]
-      ]
+    "When called by another workflow": {
+      "main": [[{ "node": "Resolve slug → delivery", "type": "main", "index": 0 }]]
     },
     "Resolve slug → delivery": {
       "main": [[{ "node": "delivery_type = file?", "type": "main", "index": 0 }]]

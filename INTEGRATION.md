@@ -14,23 +14,29 @@
 [GitHub Pages: статичный сайт]
         │
         │  1) клик «Перейти к оплате» → POST на n8n webhook
-        │     payload: { project, guide_slug, email, idempotence_key, price_kopeks_check, source_url }
+        │     payload: { project: "delaydelo", guide_slug, email, idempotence_key, price_kopeks_check, source_url }
         ▼
-[n8n: webhook /delaydelo-create-payment]
+[n8n: webhook /delaydelo-create-payment]   (отдельный, со своим CORS под artemida2.github.io)
         │
         │  2) валидируем slug по белому списку, берём цену из каталога
-        │  3) ЮKassa API: создаём платёж + receipt 54‑ФЗ
+        │  3) ЮKassa API: создаём платёж + receipt 54‑ФЗ + metadata.project = "delaydelo"
         │     получаем confirmation_url
         │
         │  4) возвращаем confirmation_url → редирект на ЮKassa
         ▼
 [ЮKassa: оплата]
         │
-        │  5) после оплаты ЮKassa дёргает webhook успеха
+        │  5) ЮKassa дёргает ОДИН общий webhook (тот, что зарегистрирован под shop):
+        │     https://hooks.neirolanding.ru/webhook/yukassa
         ▼
-[n8n: webhook /delaydelo-yukassa]
+[n8n: существующий receiver Special English] /webhook/yukassa
         │
-        │  6) проверяем event=payment.succeeded и metadata.project=delaydelo
+        │  6) сразу после Webhook+IF(payment.succeeded) — Switch по metadata.project:
+        │      • "special-english" / пусто  → штатная ветвь Special English (как сейчас)
+        │      • "delaydelo"                 → Execute Workflow → sub-workflow Делай Дело
+        ▼
+[n8n: sub-workflow Делай Дело — delaydelo-yukassa-receiver.json]
+        │
         │  7) находим товар по metadata.guide_slug
         │  8) ветвление по deliveryType:
         │      • file → Google Drive download → Gmail с вложением
@@ -43,20 +49,23 @@
 
 В каталоге [`n8n/`](./n8n/) лежат два готовых workflow в формате n8n JSON. Импортируйте оба:
 
-- [`delaydelo-create-payment.json`](./n8n/delaydelo-create-payment.json) — создаёт платёж в ЮKassa, возвращает confirmation_url. Путь webhook: `/webhook/delaydelo-create-payment`.
-- [`delaydelo-yukassa-receiver.json`](./n8n/delaydelo-yukassa-receiver.json) — принимает уведомление об успешной оплате, скачивает файл из Drive (или формирует письмо со ссылкой) и шлёт письмо. Путь webhook: `/webhook/delaydelo-yukassa`.
+- [`delaydelo-create-payment.json`](./n8n/delaydelo-create-payment.json) — создаёт платёж в ЮKassa, возвращает confirmation_url. Путь webhook: `/webhook/delaydelo-create-payment`. **Отдельный URL**, с CORS под `artemida2.github.io`.
+- [`delaydelo-yukassa-receiver.json`](./n8n/delaydelo-yukassa-receiver.json) — **sub-workflow**: принимает данные о платеже (через `Execute Workflow Trigger`), скачивает файл из Drive (или формирует письмо со ссылкой) и шлёт письмо. **Своего webhook не имеет** — его вызывает существующий receiver Special English.
 
-Оба workflow помечают payload `metadata.project = "delaydelo"`, чтобы один и тот же n8n мог обслуживать несколько сайтов параллельно (например, Special English и Делай Дело — каждый со своим receiver, который фильтрует по project).
+Оба workflow помечают payload `metadata.project = "delaydelo"`, чтобы один и тот же n8n мог обслуживать несколько сайтов параллельно. ЮKassa-уведомления приходят на **один общий webhook** Special English `/webhook/yukassa`, оттуда Switch по `metadata.project` направляет события в нужный sub-workflow.
 
 ## Шаг 1 — Подготовить ЮKassa
 
-1. Зарегистрируйтесь как **самозанятый/ИП** в [ЮKassa](https://yookassa.ru/) или используйте существующий магазин.
+Если у вас уже подключена ЮKassa для другого проекта (например, Special English) и используется тот же магазин — **новый shop регистрировать не нужно**, новый webhook регистрировать тоже не нужно. Действующий `https://hooks.neirolanding.ru/webhook/yukassa` будет работать для обоих проектов; они различаются по `metadata.project` в payload платежа.
+
+Если же вы только подключаете ЮKassa с нуля:
+
+1. Зарегистрируйтесь как **самозанятый/ИП** в [ЮKassa](https://yookassa.ru/).
 2. В кабинете → **Интеграция → Ключи API**: создайте `shopId` и `secretKey`.
 3. Включите **квитанцию 54‑ФЗ** (для самозанятых ЮKassa автоматически отправит чек в «Мой налог»).
-4. Раздел **«Уведомления»** → добавьте webhook URL и события:
-   - URL: `https://<ваш-n8n>/webhook/delaydelo-yukassa`
+4. Раздел **«Уведомления»** → добавьте один webhook URL и события:
+   - URL: `https://hooks.neirolanding.ru/webhook/yukassa`
    - События: `payment.succeeded`, `payment.canceled`, `refund.succeeded`
-   - Если у вас уже есть второй проект (например, Special English) — оставьте старый webhook на месте, ЮKassa поддерживает несколько URL одновременно.
 5. **Лимиты для НПД (самозанятого):**
    - 500 000 ₽/мес на приём по картам через ЮKassa.
    - 2 400 000 ₽/год — общий лимит дохода НПД.
@@ -67,15 +76,50 @@
 1. В UI n8n → **Workflows → Import from File** → загрузите оба JSON из `n8n/`.
 2. После импорта откройте каждый workflow и **подставьте credentials**:
 
-   | Узел | Тип credentials | Что подставить |
+   | Workflow → узел | Тип credentials | Что подставить |
    |---|---|---|
-   | `YooKassa: POST /v3/payments` | HTTP Basic Auth | `username = shopId`, `password = secretKey` (создайте credential с именем «ЮKassa shopId:secretKey» — на него ссылается JSON) |
-   | `Google Drive: download` | Google Drive OAuth2 | OAuth от того аккаунта, в Drive которого лежат файлы продуктов |
-   | `Gmail: send file` / `Gmail: send link` | Gmail OAuth2 | Тот же или отдельный почтовый аккаунт; от его адреса будет уходить письмо покупателю |
+   | `delaydelo-create-payment` → `YooKassa: POST /v3/payments` | HTTP Basic Auth | `username = shopId`, `password = secretKey` — тот же credential, что в Special English create-payment, или новый, если магазин отдельный |
+   | `delaydelo-yukassa-receiver` → `Google Drive: download` | Google Drive OAuth2 | OAuth от того аккаунта, в Drive которого лежат файлы продуктов |
+   | `delaydelo-yukassa-receiver` → `Gmail: send file` / `Gmail: send link` | Gmail OAuth2 | Тот же или отдельный почтовый аккаунт; от его адреса будет уходить письмо покупателю |
 
-   В JSON указаны имена credentials с префиксом `REPLACE_WITH_YOUR_*` — n8n при первом запуске попросит выбрать реальный credential. Сами JSON редактировать не нужно.
+   В JSON имена credentials имеют префикс `REPLACE_WITH_YOUR_*` — n8n при первом запуске попросит выбрать реальный credential. Сами JSON редактировать не нужно.
 
-3. **Активируйте оба workflow** (тумблер `Active`).
+3. **Активируйте `delaydelo-create-payment`** (тумблер `Active`). Receiver-subflow `delaydelo-yukassa-receiver` сам ничем не активируется — он вызывается из родительского workflow (см. Шаг 2.5).
+
+## Шаг 2.5 — Подключить subflow к существующему receiver Special English
+
+Идея: ЮKassa шлёт уведомления на ОДИН общий webhook `/webhook/yukassa`, который у вас уже работает в Special English. После проверки `event === "payment.succeeded"` нужно ветвить поток по `metadata.project`: для `"delaydelo"` — вызвать subflow «Делай Дело», для всего остального — оставить штатную логику Special English.
+
+**Шаги в UI n8n:**
+
+1. Откройте существующий workflow Special English receiver (тот, что слушает `/webhook/yukassa`).
+2. Сразу **после узла `Only payment.succeeded1`** добавьте узел **`Switch`** (n8n-nodes-base.switch).
+3. Настройте Switch:
+   - **Mode**: `Rules`
+   - **Routing Rule 1**:
+     - Value 1 (left): `={{ $json.body.object.metadata.project || 'special-english' }}`
+     - Operation: `equals`
+     - Value 2 (right): `delaydelo`
+     - Output: `0`
+   - **Routing Rule 2**:
+     - Value 1 (left): `={{ $json.body.object.metadata.project || 'special-english' }}`
+     - Operation: `equals`
+     - Value 2 (right): `special-english`
+     - Output: `1`
+   - **Fallback Output**: `1` (на всякий случай — пусть пустой/неизвестный project едет в Special English как раньше)
+4. К **Output 0** Switch'а подключите узел **`Execute Workflow`**:
+   - **Workflow**: выберите импортированный `Делай Дело — receiver subflow`
+   - **Input Data Mode**: `Pass through items` (или `Define manually` с выражением `={{ $json }}`)
+5. К **Output 1** Switch'а подключите штатную ветвь Special English (`Resolve slug → file + email1` — то, что было подключено к выходу IF).
+6. Сохраните workflow и активируйте (если он уже не активен).
+
+**Проверка:** в существующем pin-data узла Webhook (или живым тестом) вы увидите, что для платежа с `metadata.project = "special-english"` поток идёт по штатной ветке, а с `metadata.project = "delaydelo"` — вызывается subflow и присылает соответствующее письмо.
+
+> Если хотите проверить subflow в изоляции, не дожидаясь реальной оплаты — у subflow есть `Manual Trigger` (узел `Test: Manual Trigger`). В UI выберите его, нажмите `Execute Node`, в pin-data узла подставьте JSON вида:
+>
+> ```json
+> { "body": { "event": "payment.succeeded", "object": { "id": "test-001", "amount": { "value": "2990.00", "currency": "RUB" }, "metadata": { "project": "delaydelo", "guide_slug": "unit-economy-excel", "email": "you@example.com" }, "receipt": { "customer": { "email": "you@example.com" } } } } }
+> ```
 
 ## Шаг 3 — Загрузить файлы продуктов в Google Drive и проставить fileId
 
@@ -106,14 +150,14 @@
 
 ```ts
 export const PAYMENTS = {
-  n8nBaseUrl: import.meta.env.PUBLIC_N8N_BASE_URL || "https://ai-konfu-u70272.vm.elestio.app",
+  n8nBaseUrl: import.meta.env.PUBLIC_N8N_BASE_URL || "https://hooks.neirolanding.ru",
   createPaymentPath: "/webhook/delaydelo-create-payment",
   projectId: "delaydelo",
   supportEmail: "hello@example.com",
 };
 ```
 
-Базовый URL n8n переопределяется на этапе сборки через переменную окружения `PUBLIC_N8N_BASE_URL`. Если вы держите n8n на отдельном поддомене — пропишите её в **GitHub Actions secrets** как `PUBLIC_N8N_BASE_URL` и добавьте в `.github/workflows/deploy.yml`:
+Базовый URL n8n по умолчанию — `https://hooks.neirolanding.ru` (тот же, что у Special English). Если в будущем понадобится переопределить, переменная `PUBLIC_N8N_BASE_URL` пробрасывается на этапе сборки через **GitHub Actions secrets**:
 
 ```yaml
 - name: Build

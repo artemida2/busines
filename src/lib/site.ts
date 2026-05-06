@@ -18,10 +18,9 @@ export const SITE = {
  * см. astro.config.mjs / GitHub Actions secrets.
  */
 export const PAYMENTS = {
-  /** Базовый URL n8n. Например: https://ai-konfu-u70272.vm.elestio.app */
+  /** Базовый URL n8n. Например: https://hooks.neirolanding.ru */
   n8nBaseUrl:
-    import.meta.env.PUBLIC_N8N_BASE_URL ||
-    "https://ai-konfu-u70272.vm.elestio.app",
+    import.meta.env.PUBLIC_N8N_BASE_URL || "https://hooks.neirolanding.ru",
   /** Путь webhook'а на n8n, который инициирует платёж в ЮKassa и возвращает confirmation_url */
   createPaymentPath: "/webhook/delaydelo-create-payment",
   /** Идентификатор проекта — кладём в metadata, чтобы единый n8n обслуживал несколько сайтов */
