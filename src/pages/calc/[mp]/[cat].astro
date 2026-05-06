@@ -1,0 +1,164 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Calculator from "../../../components/Calculator.astro";
+import { commissions, listAllLandingPaths } from "../../../lib/calc";
+import type { MarketplaceSlug } from "../../../lib/calc";
+import { getCollection } from "astro:content";
+
+export async function getStaticPaths() {
+  return listAllLandingPaths().map(({ mp, cat }) => ({
+    params: { mp, cat },
+  }));
+}
+
+type Params = { mp: MarketplaceSlug; cat: string };
+const { mp, cat } = Astro.params as Params;
+
+const marketplace = commissions.marketplaces[mp];
+const category = marketplace?.categories[cat];
+
+if (!marketplace || !category) {
+  throw new Error(`Unknown calc landing: ${mp}/${cat}`);
+}
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+// Похожие статьи блога: фильтруем по тегу маркетплейса/категории.
+const blogPosts = await getCollection("blog", ({ data }) => !data.draft);
+const related = blogPosts
+  .filter((p) => {
+    const tags = p.data.tags?.map((t) => t.toLowerCase()) || [];
+    return (
+      p.data.track === "marketplace" &&
+      (tags.includes(mp) ||
+        tags.includes("юнит-экономика") ||
+        tags.includes("карточки") ||
+        tags.includes("акции") ||
+        tags.includes("возвраты"))
+    );
+  })
+  .slice(0, 3);
+
+const products = await getCollection("products", ({ data }) => data.track === "marketplace");
+const featuredProduct = products.find((p) => p.slug === "unit-economy-excel") || products[0];
+
+const title = `Калькулятор юнит‑экономики ${marketplace.name} — ${category.name} (${category.commission}%)`;
+const description = `Считаем прибыль на ${marketplace.name} в категории «${category.name}»: комиссия ${category.commission}%, средний чек ${category.averagePrice} ₽, возвраты ${category.returnRate}%. Безопасная цена в акции, точка безубыточности, светофоры.`;
+---
+
+<BaseLayout title={title} description={description}>
+  <section class="container-page py-10 md:py-14">
+    <nav class="mb-6 flex flex-wrap items-center gap-2 text-xs text-ink-muted">
+      <a href={`${base}/`} class="hover:text-brand">Главная</a>
+      <span>/</span>
+      <a href={`${base}/calc/`} class="hover:text-brand">Калькулятор</a>
+      <span>/</span>
+      <span class="font-mono uppercase">{marketplace.name}</span>
+      <span>/</span>
+      <span class="font-medium text-ink">{category.name}</span>
+    </nav>
+
+    <header class="mb-8 max-w-3xl">
+      <span class="badge badge-brand">{marketplace.name} · {category.name}</span>
+      <h1 class="mt-3 font-display text-4xl font-extrabold leading-[1.05] md:text-5xl">
+        Юнит‑экономика {marketplace.name} в категории <span class="bg-pattern-lime px-2">«{category.name}»</span>
+      </h1>
+      <p class="mt-4 text-lg text-ink-soft">
+        Базовая комиссия категории — <strong>{category.commission}%</strong>,
+        средний чек — <strong>{category.averagePrice} ₽</strong>, средний процент возвратов —
+        <strong>{category.returnRate}%</strong>. Калькулятор ниже подставлен под эту нишу — поменяйте
+        себестоимость и цену под свой SKU.
+      </p>
+    </header>
+
+    <Calculator defaultMp={mp} defaultCategory={cat} lockMpAndCategory={true} />
+
+    {category.notes && (
+      <div class="mt-6 rounded-card bg-paper-tint p-5 text-sm text-ink-soft md:p-6">
+        <h2 class="font-display text-base font-bold text-ink">Что важно знать о категории</h2>
+        <p class="mt-2">{category.notes}</p>
+      </div>
+    )}
+
+    <!-- Quick stats -->
+    <div class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="rounded-card border border-ink/10 bg-paper p-4">
+        <div class="text-xs uppercase tracking-wider text-ink-muted">Комиссия</div>
+        <div class="mt-1 font-display text-2xl font-extrabold">{category.commission}%</div>
+        {marketplace.acquiringFee > 0 && (
+          <div class="mt-1 text-xs text-ink-muted">+ {marketplace.acquiringFee}% эквайринг</div>
+        )}
+      </div>
+      <div class="rounded-card border border-ink/10 bg-paper p-4">
+        <div class="text-xs uppercase tracking-wider text-ink-muted">Логистика FBO</div>
+        <div class="mt-1 font-display text-2xl font-extrabold">{category.fboLogistics} ₽</div>
+        <div class="mt-1 text-xs text-ink-muted">за единицу</div>
+      </div>
+      <div class="rounded-card border border-ink/10 bg-paper p-4">
+        <div class="text-xs uppercase tracking-wider text-ink-muted">Логистика FBS</div>
+        <div class="mt-1 font-display text-2xl font-extrabold">{category.fbsLogistics} ₽</div>
+        <div class="mt-1 text-xs text-ink-muted">за единицу</div>
+      </div>
+      <div class="rounded-card border border-ink/10 bg-paper p-4">
+        <div class="text-xs uppercase tracking-wider text-ink-muted">Возвраты</div>
+        <div class="mt-1 font-display text-2xl font-extrabold">{category.returnRate}%</div>
+        <div class="mt-1 text-xs text-ink-muted">средний по нише</div>
+      </div>
+    </div>
+
+    <!-- Featured product CTA -->
+    {featuredProduct && (
+      <a
+        href={`${base}/products/${featuredProduct.slug}/`}
+        class="mt-10 grid items-center gap-4 rounded-card bg-pattern-graphite p-5 text-paper md:grid-cols-[1.5fr_1fr] md:p-7"
+      >
+        <div>
+          <span class="badge bg-pattern-lime text-ink">Рекомендуем</span>
+          <h2 class="mt-3 font-display text-2xl font-extrabold md:text-3xl">
+            {featuredProduct.data.title}
+          </h2>
+          <p class="mt-2 text-sm text-paper/80">{featuredProduct.data.summary}</p>
+        </div>
+        <div class="flex items-center justify-end gap-3 md:justify-end">
+          <span class="font-display text-3xl font-extrabold">{featuredProduct.data.price} ₽</span>
+          <span class="arrow-pill">→</span>
+        </div>
+      </a>
+    )}
+
+    <!-- Related blog posts -->
+    {related.length > 0 && (
+      <div class="mt-14">
+        <h2 class="font-display text-2xl font-extrabold md:text-3xl">Что почитать дальше</h2>
+        <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {related.map((p) => (
+            <a
+              href={`${base}/blog/${p.slug}/`}
+              class="group rounded-card border border-ink/10 bg-paper p-4 transition-colors hover:border-brand"
+            >
+              <div class="font-mono text-xs text-ink-muted">
+                {p.data.publishedAt
+                  ? new Date(p.data.publishedAt).toLocaleDateString("ru-RU", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })
+                  : ""}
+              </div>
+              <div class="mt-2 font-display text-base font-bold leading-tight group-hover:text-brand">
+                {p.data.title}
+              </div>
+              <div class="mt-2 text-xs text-ink-muted line-clamp-3">{p.data.summary}</div>
+            </a>
+          ))}
+        </div>
+      </div>
+    )}
+
+    <!-- Disclaimer -->
+    <p class="mt-12 max-w-2xl text-xs text-ink-muted">
+      Ставки актуальны на <strong>{commissions.lastUpdated}</strong>. Перед запуском SKU обязательно
+      сверьтесь с актуальной комиссией в личном кабинете {marketplace.name}.
+    </p>
+  </section>
+</BaseLayout>

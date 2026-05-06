@@ -1,0 +1,302 @@
+{
+  "version": "2026-05",
+  "lastUpdated": "2026-05-01",
+  "disclaimer": "Ставки актуальны на дату последнего обновления. Перед запуском SKU обязательно сверьтесь с актуальной комиссией в личном кабинете маркетплейса — они могут меняться по уведомлению за 3 дня. Калькулятор даёт ориентир, не финальный финплан.",
+  "marketplaces": {
+    "wb": {
+      "name": "Wildberries",
+      "slug": "wb",
+      "tagline": "Маркетплейс №1 в РФ по обороту",
+      "acquiringFee": 0,
+      "categories": {
+        "odezhda": {
+          "name": "Одежда",
+          "commission": 21,
+          "fboLogistics": 95,
+          "fbsLogistics": 65,
+          "returnRate": 45,
+          "averagePrice": 1800,
+          "notes": "Высокий процент возвратов из-за размеров. Видео-карточки и точные размерные сетки снижают возвраты на 10–20%."
+        },
+        "obuv": {
+          "name": "Обувь",
+          "commission": 22,
+          "fboLogistics": 130,
+          "fbsLogistics": 95,
+          "returnRate": 40,
+          "averagePrice": 2900,
+          "notes": "Тяжёлый категорийный вес → высокая логистика. Возвраты из-за размера — норма."
+        },
+        "aksessuary": {
+          "name": "Аксессуары",
+          "commission": 19,
+          "fboLogistics": 60,
+          "fbsLogistics": 45,
+          "returnRate": 18,
+          "averagePrice": 950,
+          "notes": "Сумки, кошельки, ремни. Низкие возвраты, средняя маржинальность."
+        },
+        "dom": {
+          "name": "Дом",
+          "commission": 17,
+          "fboLogistics": 75,
+          "fbsLogistics": 55,
+          "returnRate": 9,
+          "averagePrice": 1200,
+          "notes": "Текстиль, посуда, декор. Стабильная категория с низкими возвратами."
+        },
+        "kuhnya": {
+          "name": "Кухня",
+          "commission": 17,
+          "fboLogistics": 80,
+          "fbsLogistics": 60,
+          "returnRate": 8,
+          "averagePrice": 1100,
+          "notes": "Посуда, термокружки, ножи. Низкие возвраты, акции работают хорошо."
+        },
+        "kosmetika": {
+          "name": "Косметика и парфюмерия",
+          "commission": 16,
+          "fboLogistics": 60,
+          "fbsLogistics": 50,
+          "returnRate": 12,
+          "averagePrice": 850,
+          "notes": "Регулируется обязательная маркировка. Срок годности — критично контролировать остатки."
+        },
+        "byuti": {
+          "name": "Бьюти и уход",
+          "commission": 15,
+          "fboLogistics": 55,
+          "fbsLogistics": 45,
+          "returnRate": 10,
+          "averagePrice": 700,
+          "notes": "Шампуни, уходовая косметика, средства для волос. Средняя оборачиваемость."
+        },
+        "elektronika": {
+          "name": "Электроника",
+          "commission": 8,
+          "fboLogistics": 110,
+          "fbsLogistics": 80,
+          "returnRate": 14,
+          "averagePrice": 4500,
+          "notes": "Низкая комиссия, но высокая логистика и риск гарантийных возвратов."
+        },
+        "igrushki": {
+          "name": "Игрушки",
+          "commission": 19,
+          "fboLogistics": 75,
+          "fbsLogistics": 55,
+          "returnRate": 12,
+          "averagePrice": 950,
+          "notes": "Сезонность к Новому году. Маркировка обязательна для большинства категорий."
+        },
+        "kantselyariya": {
+          "name": "Канцелярия",
+          "commission": 18,
+          "fboLogistics": 50,
+          "fbsLogistics": 40,
+          "returnRate": 5,
+          "averagePrice": 350,
+          "notes": "Низкий чек, низкие возвраты. Работает только на больших объёмах."
+        },
+        "knigi": {
+          "name": "Книги",
+          "commission": 12,
+          "fboLogistics": 45,
+          "fbsLogistics": 35,
+          "returnRate": 4,
+          "averagePrice": 450,
+          "notes": "Низкая маржа, но и минимальные возвраты. Подходит для перепродажи остатков."
+        },
+        "sport": {
+          "name": "Спорт и фитнес",
+          "commission": 18,
+          "fboLogistics": 95,
+          "fbsLogistics": 70,
+          "returnRate": 11,
+          "averagePrice": 1500,
+          "notes": "Сезонные пики (январь, май). Растущая категория."
+        },
+        "avto": {
+          "name": "Автотовары",
+          "commission": 15,
+          "fboLogistics": 90,
+          "fbsLogistics": 65,
+          "returnRate": 10,
+          "averagePrice": 1300,
+          "notes": "Многие SKU требуют точного подбора по марке/модели — это снижает возвраты."
+        },
+        "zoo": {
+          "name": "Зоотовары",
+          "commission": 17,
+          "fboLogistics": 80,
+          "fbsLogistics": 60,
+          "returnRate": 7,
+          "averagePrice": 750,
+          "notes": "Корма, аксессуары, наполнители. Высокая повторная покупка."
+        },
+        "sad": {
+          "name": "Сад и дача",
+          "commission": 18,
+          "fboLogistics": 110,
+          "fbsLogistics": 80,
+          "returnRate": 9,
+          "averagePrice": 1400,
+          "notes": "Жёсткая сезонность апрель–август. Зимой склад простаивает."
+        },
+        "himiya": {
+          "name": "Бытовая химия",
+          "commission": 16,
+          "fboLogistics": 70,
+          "fbsLogistics": 55,
+          "returnRate": 6,
+          "averagePrice": 480,
+          "notes": "Высокая повторная покупка, низкие возвраты. Чувствительна к цене."
+        },
+        "produkty": {
+          "name": "Продукты",
+          "commission": 15,
+          "fboLogistics": 70,
+          "fbsLogistics": 55,
+          "returnRate": 5,
+          "averagePrice": 650,
+          "notes": "Срок годности — главный риск. Лучше FBS, чтобы контролировать остатки."
+        },
+        "zdorovie": {
+          "name": "Здоровье и БАДы",
+          "commission": 18,
+          "fboLogistics": 65,
+          "fbsLogistics": 50,
+          "returnRate": 7,
+          "averagePrice": 1100,
+          "notes": "БАДы требуют сертификации. Контроль маркировки — обязательно."
+        },
+        "mebel": {
+          "name": "Мебель",
+          "commission": 14,
+          "fboLogistics": 280,
+          "fbsLogistics": 220,
+          "returnRate": 12,
+          "averagePrice": 6500,
+          "notes": "Крупногабарит → высокая логистика. Часть SKU доступна только FBS."
+        },
+        "santehnika": {
+          "name": "Сантехника и DIY",
+          "commission": 16,
+          "fboLogistics": 95,
+          "fbsLogistics": 70,
+          "returnRate": 8,
+          "averagePrice": 1700,
+          "notes": "Инструменты, расходники, сантехника. Низкие возвраты у DIY‑аудитории."
+        }
+      }
+    },
+    "ozon": {
+      "name": "Ozon",
+      "slug": "ozon",
+      "tagline": "Маркетплейс №2 в РФ, активно растёт",
+      "acquiringFee": 1.5,
+      "categories": {
+        "odezhda": {
+          "name": "Одежда",
+          "commission": 18,
+          "fboLogistics": 90,
+          "fbsLogistics": 65,
+          "returnRate": 38,
+          "averagePrice": 2100,
+          "notes": "Менее сильная конкуренция, чем на WB. Обязательна маркировка."
+        },
+        "obuv": {
+          "name": "Обувь",
+          "commission": 20,
+          "fboLogistics": 125,
+          "fbsLogistics": 90,
+          "returnRate": 35,
+          "averagePrice": 3300,
+          "notes": "Чек выше, чем на WB. Меньше распродажных пиков."
+        },
+        "aksessuary": {
+          "name": "Аксессуары",
+          "commission": 17,
+          "fboLogistics": 60,
+          "fbsLogistics": 45,
+          "returnRate": 14,
+          "averagePrice": 1100,
+          "notes": "Сумки, кошельки, ремни. Хорошо работает SEO выдача."
+        },
+        "elektronika": {
+          "name": "Электроника",
+          "commission": 5,
+          "fboLogistics": 105,
+          "fbsLogistics": 75,
+          "returnRate": 11,
+          "averagePrice": 5800,
+          "notes": "Самая низкая комиссия Ozon. Подходит для крупных и средних поставщиков."
+        },
+        "bytovaya": {
+          "name": "Бытовая техника",
+          "commission": 7,
+          "fboLogistics": 240,
+          "fbsLogistics": 180,
+          "returnRate": 8,
+          "averagePrice": 7500,
+          "notes": "Крупногабарит. Часто Ozon Rocket даёт скидку на логистику."
+        },
+        "dom": {
+          "name": "Дом",
+          "commission": 16,
+          "fboLogistics": 70,
+          "fbsLogistics": 55,
+          "returnRate": 8,
+          "averagePrice": 1250,
+          "notes": "Текстиль, посуда, декор. Стабильная категория."
+        },
+        "kosmetika": {
+          "name": "Косметика и парфюмерия",
+          "commission": 15,
+          "fboLogistics": 55,
+          "fbsLogistics": 45,
+          "returnRate": 10,
+          "averagePrice": 950,
+          "notes": "Маркировка обязательна. На Ozon чек чуть выше, чем на WB."
+        },
+        "byuti": {
+          "name": "Бьюти и уход",
+          "commission": 14,
+          "fboLogistics": 50,
+          "fbsLogistics": 40,
+          "returnRate": 9,
+          "averagePrice": 800,
+          "notes": "Растущая категория, особенно K‑beauty и натуральная косметика."
+        },
+        "avto": {
+          "name": "Автотовары",
+          "commission": 12,
+          "fboLogistics": 90,
+          "fbsLogistics": 65,
+          "returnRate": 9,
+          "averagePrice": 1500,
+          "notes": "Низкая комиссия, активно поддерживается Ozon. Высокий потенциал роста."
+        },
+        "igrushki": {
+          "name": "Игрушки",
+          "commission": 18,
+          "fboLogistics": 75,
+          "fbsLogistics": 55,
+          "returnRate": 11,
+          "averagePrice": 1100,
+          "notes": "Сезонность к НГ. Конструкторы и развивашки — самые маржинальные."
+        },
+        "sport": {
+          "name": "Спорт и фитнес",
+          "commission": 17,
+          "fboLogistics": 95,
+          "fbsLogistics": 70,
+          "returnRate": 10,
+          "averagePrice": 1700,
+          "notes": "Сезонные пики (январь, май). На Ozon растёт быстрее, чем на WB."
+        }
+      }
+    }
+  }
+}
