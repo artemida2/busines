@@ -16,7 +16,7 @@
         │  1) клик «Перейти к оплате» → POST на n8n webhook
         │     payload: { project: "delaydelo", guide_slug, email, idempotence_key, price_kopeks_check, source_url }
         ▼
-[n8n: webhook /delaydelo-create-payment]   (отдельный, со своим CORS под artemida2.github.io)
+[n8n: webhook /delaydelo-create-payment]   (отдельный, со своим CORS под delo-delai.ru)
         │
         │  2) валидируем slug по белому списку, берём цену из каталога
         │  3) ЮKassa API: создаём платёж + receipt 54‑ФЗ + metadata.project = "delaydelo"
@@ -49,7 +49,7 @@
 
 В каталоге [`n8n/`](./n8n/) лежат два готовых workflow в формате n8n JSON. Импортируйте оба:
 
-- [`delaydelo-create-payment.json`](./n8n/delaydelo-create-payment.json) — создаёт платёж в ЮKassa, возвращает confirmation_url. Путь webhook: `/webhook/delaydelo-create-payment`. **Отдельный URL**, с CORS под `artemida2.github.io`.
+- [`delaydelo-create-payment.json`](./n8n/delaydelo-create-payment.json) — создаёт платёж в ЮKassa, возвращает confirmation_url. Путь webhook: `/webhook/delaydelo-create-payment`. **Отдельный URL**, с CORS под `delo-delai.ru`.
 - [`delaydelo-yukassa-receiver.json`](./n8n/delaydelo-yukassa-receiver.json) — **sub-workflow**: принимает данные о платеже (через `Execute Workflow Trigger`), скачивает файл из Drive (или формирует письмо со ссылкой) и шлёт письмо. **Своего webhook не имеет** — его вызывает существующий receiver Special English.
 
 Оба workflow помечают payload `metadata.project = "delaydelo"`, чтобы один и тот же n8n мог обслуживать несколько сайтов параллельно. ЮKassa-уведомления приходят на **один общий webhook** Special English `/webhook/yukassa`, оттуда Switch по `metadata.project` направляет события в нужный sub-workflow.

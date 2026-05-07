@@ -33,8 +33,8 @@ jobs:
       - name: Build site
         run: npm run build
         env:
-          SITE_URL: https://artemida2.github.io
-          BASE_PATH: /busines
+          SITE_URL: https://delo-delai.ru
+          BASE_PATH: /
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
