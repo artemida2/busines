@@ -1,223 +1,205 @@
 # Связка ЮKassa → n8n → Google Drive
 
-Этот документ описывает, как «оживить» сайт: принимать оплату ЮKassa, автоматически
-выдавать ссылку на скачивание из Google Drive и присылать чек 54‑ФЗ на e‑mail
-покупателя. Всё держится на одном self‑hosted **n8n** и работает с GitHub Pages,
-у которого нет своего бэкенда.
+Этот документ описывает, как подключить оплату на сайте **Делай Дело**: принимать
+платежи через ЮKassa, автоматически выдавать файл из Google Drive (или ссылку
+на Notion / Google Sheets) и присылать чек 54‑ФЗ на e‑mail покупателя. Всё работает
+с GitHub Pages — у которого нет своего бэкенда — через self‑hosted **n8n** как
+посредник.
 
-> Никаких секретов в репозитории. Все ключи живут в переменных окружения вашего n8n.
+> Никаких секретов в репозитории. Все ключи живут в credentials вашего n8n.
 
 ## Архитектура
 
 ```
 [GitHub Pages: статичный сайт]
         │
-        │  1) клик «Купить» → POST на n8n webhook
-        │     payload: { product, price, email }
+        │  1) клик «Перейти к оплате» → POST на n8n webhook
+        │     payload: { project: "delaydelo", guide_slug, email, idempotence_key, price_kopeks_check, source_url }
         ▼
-[n8n: webhook /create-payment]
+[n8n: webhook /delaydelo-create-payment]   (отдельный, со своим CORS под artemida2.github.io)
         │
-        │  2) ЮKassa API: создаёт платёж и chequepayment
+        │  2) валидируем slug по белому списку, берём цену из каталога
+        │  3) ЮKassa API: создаём платёж + receipt 54‑ФЗ + metadata.project = "delaydelo"
         │     получаем confirmation_url
-        ▼
-        │  3) возвращает confirmation_url → редирект на ЮKassa
+        │
+        │  4) возвращаем confirmation_url → редирект на ЮKassa
         ▼
 [ЮKassa: оплата]
         │
-        │  4) после оплаты ЮKassa вызывает webhook успеха
+        │  5) ЮKassa дёргает ОДИН общий webhook (тот, что зарегистрирован под shop):
+        │     https://hooks.neirolanding.ru/webhook/yukassa
         ▼
-[n8n: webhook /yookassa-success]
+[n8n: существующий receiver Special English] /webhook/yukassa
         │
-        │  5) находит товар по metadata.product
-        │  6) генерирует подписанную ссылку Google Drive
-        │  7) отправляет e‑mail с ссылкой через SMTP (Yandex / Mail.ru / SendGrid)
-        │  8) логирует продажу в Google Sheets / Airtable
+        │  6) сразу после Webhook+IF(payment.succeeded) — Switch по metadata.project:
+        │      • "special-english" / пусто  → штатная ветвь Special English (как сейчас)
+        │      • "delaydelo"                 → Execute Workflow → sub-workflow Делай Дело
         ▼
-[Покупатель: получает ссылку и чек]
+[n8n: sub-workflow Делай Дело — delaydelo-yukassa-receiver.json]
+        │
+        │  7) находим товар по metadata.guide_slug
+        │  8) ветвление по deliveryType:
+        │      • file → Google Drive download → Gmail с вложением
+        │      • link → Gmail с ссылкой (Notion duplicate / Sheets копия / Pro доступ)
+        ▼
+[Покупатель: получает файл/ссылку и чек 54‑ФЗ от ЮKassa]
 ```
+
+## Готовые workflow
+
+В каталоге [`n8n/`](./n8n/) лежат два готовых workflow в формате n8n JSON. Импортируйте оба:
+
+- [`delaydelo-create-payment.json`](./n8n/delaydelo-create-payment.json) — создаёт платёж в ЮKassa, возвращает confirmation_url. Путь webhook: `/webhook/delaydelo-create-payment`. **Отдельный URL**, с CORS под `artemida2.github.io`.
+- [`delaydelo-yukassa-receiver.json`](./n8n/delaydelo-yukassa-receiver.json) — **sub-workflow**: принимает данные о платеже (через `Execute Workflow Trigger`), скачивает файл из Drive (или формирует письмо со ссылкой) и шлёт письмо. **Своего webhook не имеет** — его вызывает существующий receiver Special English.
+
+Оба workflow помечают payload `metadata.project = "delaydelo"`, чтобы один и тот же n8n мог обслуживать несколько сайтов параллельно. ЮKassa-уведомления приходят на **один общий webhook** Special English `/webhook/yukassa`, оттуда Switch по `metadata.project` направляет события в нужный sub-workflow.
 
 ## Шаг 1 — Подготовить ЮKassa
 
+Если у вас уже подключена ЮKassa для другого проекта (например, Special English) и используется тот же магазин — **новый shop регистрировать не нужно**, новый webhook регистрировать тоже не нужно. Действующий `https://hooks.neirolanding.ru/webhook/yukassa` будет работать для обоих проектов; они различаются по `metadata.project` в payload платежа.
+
+Если же вы только подключаете ЮKassa с нуля:
+
 1. Зарегистрируйтесь как **самозанятый/ИП** в [ЮKassa](https://yookassa.ru/).
-2. Подключите **shopId** и **secretKey** в кабинете → Интеграция → API.
-3. Включите квитанцию для самозанятого (54‑ФЗ).
-4. В разделе «Уведомления» добавьте webhook:
-   `https://<ваш‑n8n>/webhook/yookassa-success` (включите события
-   `payment.succeeded` и `payment.canceled`).
+2. В кабинете → **Интеграция → Ключи API**: создайте `shopId` и `secretKey`.
+3. Включите **квитанцию 54‑ФЗ** (для самозанятых ЮKassa автоматически отправит чек в «Мой налог»).
+4. Раздел **«Уведомления»** → добавьте один webhook URL и события:
+   - URL: `https://hooks.neirolanding.ru/webhook/yukassa`
+   - События: `payment.succeeded`, `payment.canceled`, `refund.succeeded`
+5. **Лимиты для НПД (самозанятого):**
+   - 500 000 ₽/мес на приём по картам через ЮKassa.
+   - 2 400 000 ₽/год — общий лимит дохода НПД.
+   - При приближении к лимиту — переключение на ИП на УСН 6%, в ЮKassa достаточно поменять реквизиты магазина.
 
-> **Ваш фронт никогда не общается с ЮKassa напрямую.** Создание платежа делает
-> n8n с серверным `secretKey` — иначе любой посетитель сайта мог бы видеть ваш ключ.
+## Шаг 2 — Импортировать workflow в n8n
 
-## Шаг 2 — Workflow n8n: создание платежа
+1. В UI n8n → **Workflows → Import from File** → загрузите оба JSON из `n8n/`.
+2. После импорта откройте каждый workflow и **подставьте credentials**:
 
-Создайте workflow `create-payment`:
+   | Workflow → узел | Тип credentials | Что подставить |
+   |---|---|---|
+   | `delaydelo-create-payment` → `YooKassa: POST /v3/payments` | HTTP Basic Auth | `username = shopId`, `password = secretKey` — тот же credential, что в Special English create-payment, или новый, если магазин отдельный |
+   | `delaydelo-yukassa-receiver` → `Google Drive: download` | Google Drive OAuth2 | OAuth от того аккаунта, в Drive которого лежат файлы продуктов |
+   | `delaydelo-yukassa-receiver` → `Gmail: send file` / `Gmail: send link` | Gmail OAuth2 | Тот же или отдельный почтовый аккаунт; от его адреса будет уходить письмо покупателю |
 
-| Узел | Тип | Настройки |
+   В JSON имена credentials имеют префикс `REPLACE_WITH_YOUR_*` — n8n при первом запуске попросит выбрать реальный credential. Сами JSON редактировать не нужно.
+
+3. **Активируйте `delaydelo-create-payment`** (тумблер `Active`). Receiver-subflow `delaydelo-yukassa-receiver` сам ничем не активируется — он вызывается из родительского workflow (см. Шаг 2.5).
+
+## Шаг 2.5 — Подключить subflow к существующему receiver Special English
+
+Идея: ЮKassa шлёт уведомления на ОДИН общий webhook `/webhook/yukassa`, который у вас уже работает в Special English. После проверки `event === "payment.succeeded"` нужно ветвить поток по `metadata.project`: для `"delaydelo"` — вызвать subflow «Делай Дело», для всего остального — оставить штатную логику Special English.
+
+**Шаги в UI n8n:**
+
+1. Откройте существующий workflow Special English receiver (тот, что слушает `/webhook/yukassa`).
+2. Сразу **после узла `Only payment.succeeded1`** добавьте узел **`Switch`** (n8n-nodes-base.switch).
+3. Настройте Switch:
+   - **Mode**: `Rules`
+   - **Routing Rule 1**:
+     - Value 1 (left): `={{ $json.body.object.metadata.project || 'special-english' }}`
+     - Operation: `equals`
+     - Value 2 (right): `delaydelo`
+     - Output: `0`
+   - **Routing Rule 2**:
+     - Value 1 (left): `={{ $json.body.object.metadata.project || 'special-english' }}`
+     - Operation: `equals`
+     - Value 2 (right): `special-english`
+     - Output: `1`
+   - **Fallback Output**: `1` (на всякий случай — пусть пустой/неизвестный project едет в Special English как раньше)
+4. К **Output 0** Switch'а подключите узел **`Execute Workflow`**:
+   - **Workflow**: выберите импортированный `Делай Дело — receiver subflow`
+   - **Input Data Mode**: `Pass through items` (или `Define manually` с выражением `={{ $json }}`)
+5. К **Output 1** Switch'а подключите штатную ветвь Special English (`Resolve slug → file + email1` — то, что было подключено к выходу IF).
+6. Сохраните workflow и активируйте (если он уже не активен).
+
+**Проверка:** в существующем pin-data узла Webhook (или живым тестом) вы увидите, что для платежа с `metadata.project = "special-english"` поток идёт по штатной ветке, а с `metadata.project = "delaydelo"` — вызывается subflow и присылает соответствующее письмо.
+
+> Если хотите проверить subflow в изоляции, не дожидаясь реальной оплаты — у subflow есть `Manual Trigger` (узел `Test: Manual Trigger`). В UI выберите его, нажмите `Execute Node`, в pin-data узла подставьте JSON вида:
+>
+> ```json
+> { "body": { "event": "payment.succeeded", "object": { "id": "test-001", "amount": { "value": "2990.00", "currency": "RUB" }, "metadata": { "project": "delaydelo", "guide_slug": "unit-economy-excel", "email": "you@example.com" }, "receipt": { "customer": { "email": "you@example.com" } } } } }
+> ```
+
+## Шаг 3 — Загрузить файлы продуктов в Google Drive и проставить fileId
+
+В рецепте `n8n/delaydelo-yukassa-receiver.json` есть карта `MAP` — в ней
+для каждого slug указан `deliveryType` и либо `fileId` (для file), либо `shareUrl` (для link).
+Замените все `REPLACE_FILE_ID_*` и `REPLACE_*_URL` на реальные значения.
+
+| Slug | Тип | Что подставить |
 |---|---|---|
-| 1. Webhook | `Webhook` | `POST /webhook/create-payment`, response = `Last node` |
-| 2. Set | `Set` | вытягиваем `product`, `email`, `price` из тела |
-| 3. HTTP Request | `HTTP Request` | см. ниже |
-| 4. Respond to Webhook | `Respond to Webhook` | возвращаем `confirmation.confirmation_url` |
+| `unit-economy-excel` | file | fileId .xlsx из Drive |
+| `wb-launch-30-days` | file | fileId .pdf из Drive |
+| `wb-card-templates` | file | fileId .zip с шаблонами |
+| `self-employed-checklist` | file | fileId .pdf |
+| `raise-price-scripts` | file | fileId .pdf |
+| `contract-template` | file | fileId .zip с .docx + инструкцией |
+| `ozon-niche-matrix` | link | URL копии Google Sheets (`/copy` ссылка) |
+| `notion-crm-master` | link | URL Notion-страницы с кнопкой Duplicate |
+| `calc-pro-year` | link | URL страницы активации Pro (пока заглушка) |
+| `calc-pro-lifetime` | link | URL страницы активации Pro (пока заглушка) |
 
-Конфигурация HTTP Request к ЮKassa:
+**Как получить fileId Google Drive:** откройте файл → правый клик → «Поделиться» → «Скопировать ссылку». В URL вида `https://drive.google.com/file/d/AAAAA-BBBBB/view?usp=sharing` идентификатор — `AAAAA-BBBBB`.
 
-- **Method:** `POST`
-- **URL:** `https://api.yookassa.ru/v3/payments`
-- **Authentication:** Basic Auth, `shopId : secretKey`
-- **Headers:**
-  - `Idempotence-Key`: `={{$randomUUID}}`
-  - `Content-Type: application/json`
-- **Body (JSON):**
+> **Доступ.** Файл должен быть доступен сервисному аккаунту/OAuth, который вы привязали к Drive‑credential в n8n. Сам публичный доступ файла включать НЕ нужно — n8n скачивает файл от своего имени.
 
-```json
-{
-  "amount": { "value": "{{ $json.price }}.00", "currency": "RUB" },
-  "capture": true,
-  "description": "Цифровой продукт: {{ $json.product }}",
-  "confirmation": {
-    "type": "redirect",
-    "return_url": "https://artemida2.github.io/busines/thanks/{{ $json.product }}/"
-  },
-  "receipt": {
-    "customer": { "email": "{{ $json.email }}" },
-    "items": [{
-      "description": "{{ $json.product }}",
-      "quantity": "1.00",
-      "amount": { "value": "{{ $json.price }}.00", "currency": "RUB" },
-      "vat_code": 1,
-      "payment_subject": "service",
-      "payment_mode": "full_payment"
-    }]
-  },
-  "metadata": {
-    "product": "{{ $json.product }}",
-    "site": "github-pages-busines"
-  }
-}
+## Шаг 4 — Настроить сайт
+
+В файле `src/lib/site.ts` есть объект `PAYMENTS`:
+
+```ts
+export const PAYMENTS = {
+  n8nBaseUrl: import.meta.env.PUBLIC_N8N_BASE_URL || "https://hooks.neirolanding.ru",
+  createPaymentPath: "/webhook/delaydelo-create-payment",
+  projectId: "delaydelo",
+  supportEmail: "hello@example.com",
+};
 ```
 
-Возвращаем фронту:
-
-```json
-{ "confirmation_url": "{{ $json.confirmation.confirmation_url }}" }
-```
-
-## Шаг 3 — Кнопка «Купить» на сайте
-
-В карточке продукта (`src/pages/products/[slug].astro`) кнопка «Купить» использует
-`paymentUrl` из frontmatter. Есть два варианта:
-
-### Вариант A — статический ЮKassa‑чекаут (просто, без n8n)
-
-Создайте в кабинете ЮKassa **«Магазин» с страницей оплаты** для каждого продукта,
-получите готовый URL и положите его в `paymentUrl` продукта:
+Базовый URL n8n по умолчанию — `https://hooks.neirolanding.ru` (тот же, что у Special English). Если в будущем понадобится переопределить, переменная `PUBLIC_N8N_BASE_URL` пробрасывается на этапе сборки через **GitHub Actions secrets**:
 
 ```yaml
-paymentUrl: "https://yookassa.ru/checkout/payments/v2/contract?orderId=..."
+- name: Build
+  env:
+    PUBLIC_N8N_BASE_URL: ${{ secrets.PUBLIC_N8N_BASE_URL }}
+  run: npm run build
 ```
 
-Минусы: e‑mail покупателя попадает к вам только через ЮKassa, выдача файла —
-в ручном режиме (или через настроенный в ЮKassa redirect и отдельный n8n‑webhook).
+`supportEmail` тоже стоит обновить под реальный — он показывается в форме оплаты, если что‑то пойдёт не так.
 
-### Вариант B — динамический через n8n (рекомендую)
+## Шаг 5 — Проверка end‑to‑end
 
-В `paymentUrl` оставляете URL вашего n8n‑webhook:
+1. На сайте откройте любой продукт, например `/products/unit-economy-excel/`.
+2. Введите свой e‑mail, поставьте чекбокс согласия с офертой, нажмите «Перейти к оплате».
+3. Должен открыться чекаут ЮKassa в режиме `test` (если в shop включён test mode).
+4. Оплатите тестовой картой (`5555 5555 5555 4477`).
+5. На указанный email должно прийти **два письма**:
+   - От вас — с файлом или ссылкой (через workflow `delaydelo-yukassa-receiver`).
+   - От ЮKassa — электронный чек 54‑ФЗ.
+6. Перейдёте на страницу `/thanks/<slug>/` после оплаты.
 
-```yaml
-paymentUrl: "https://<ваш-n8n>/webhook/create-payment?product=wb-launch-30-days&price=990"
-```
+Если файл/чек не пришли — проверьте n8n executions у обоих workflow: видны все шаги и любые ошибки валидации (например, неверный slug).
 
-И добавляете в `src/components/ProductCard.astro` (или прямо в `[slug].astro`) JS, который
-сначала спрашивает e‑mail, потом дергает webhook и редиректит на confirmation_url.
+## Безопасность
 
-Минимальный сниппет для кнопки:
+- **Цена** в каталоге сайта (`src/content/products/*.md`) и в каталоге n8n (`delaydelo-create-payment.json`) **должны совпадать**. Если расходятся, сервер берёт цену из своего каталога (это безопасно — клиент не может подделать цену), но в `metadata.price_mismatch` будет видно расхождение. Это полезно мониторить.
+- Webhook сайта → n8n работает по `https://`, никакой ключ туда не передаётся: всё, что нужно, — это slug и email. Цена считается на сервере по slug.
+- ЮKassa secretKey хранится только в credentials n8n — не в репозитории и не в коде сайта.
+- Idempotence-Key генерится на клиенте через `crypto.randomUUID()` и пробрасывается в ЮKassa — двойной клик не создаёт два платежа.
 
-```html
-<button id="buy" data-webhook="..." data-product="..." data-price="...">Купить</button>
-<script type="module">
-  document.querySelector("#buy")?.addEventListener("click", async (e) => {
-    const btn = e.currentTarget;
-    const email = window.prompt("Куда отправить файл? Введите e‑mail");
-    if (!email) return;
-    const res = await fetch(btn.dataset.webhook, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        product: btn.dataset.product,
-        price: Number(btn.dataset.price),
-        email,
-      }),
-    });
-    const { confirmation_url } = await res.json();
-    if (confirmation_url) location.href = confirmation_url;
-  });
-</script>
-```
+## Что НЕ делает эта Phase 1‑интеграция
 
-## Шаг 4 — Workflow n8n: успешная оплата
+- **Не делает рекуррент** (автосписания каждый месяц для Pro 490 ₽). Это отдельный workflow с `save_payment_method=true` и cron‑узлом, добавим в Phase 3.
+- **Не записывает продажи в Google Sheets / Airtable.** При желании — добавьте в receiver workflow ещё один узел Google Sheets append после Gmail.
+- **Не отправляет напоминание о возврате**, если письмо ушло в спам. На входе в Phase 2 можно прикрутить `Wait 30m → IF email_open == false → resend`.
 
-Создайте workflow `yookassa-success`:
+## Альтернатива на минимуме (без n8n)
 
-| Узел | Тип | Назначение |
-|---|---|---|
-| 1. Webhook | `Webhook` | `POST /webhook/yookassa-success`, читаем тело |
-| 2. IF | `IF` | `event === payment.succeeded` |
-| 3. Set | `Set` | `productSlug = object.metadata.product`, `email = object.receipt.customer.email` |
-| 4. Google Drive | `Google Drive` | находим файл по имени `{{$json.productSlug}}.pdf`, генерируем shareable link |
-| 5. SMTP | `Send Email` | отправляем письмо «ваш файл готов» с ссылкой |
-| 6. Google Sheets | `Append row` | логируем продажу: дата, продукт, сумма, e‑mail |
+Если по каким‑либо причинам сейчас нельзя поднимать n8n — можно переключиться на **Variant A**: статические ЮKassa‑чекауты на каждый продукт.
 
-Шаблон письма:
+1. В кабинете ЮKassa → **«Платежи без интеграции» → создать ссылку**.
+2. Полученный URL положить в `paymentUrl` соответствующего продукта в `src/content/products/*.md`.
+3. В `PaymentForm.astro` поменять submit‑обработчик на `window.location = data.paymentUrl` без обращения к webhook.
 
-```text
-Тема: Ваш файл «{{$json.productSlug}}» готов
-
-Здравствуйте!
-
-Спасибо за покупку. Ссылка на скачивание (действует 30 дней):
-
-{{$json.driveLink}}
-
-Чек об оплате 54‑ФЗ ЮKassa отправит отдельным письмом.
-Если ссылка не открывается — ответьте на это письмо.
-
-— Делай Дело
-```
-
-## Шаг 5 — Хранение файлов в Google Drive
-
-1. Создайте отдельную папку `busines-products`.
-2. Положите файлы с именами, совпадающими со `slug` продукта (`wb-launch-30-days.pdf`).
-3. В n8n используйте Google Drive → **Generate Sharing Link** → `anyone with link can view`.
-4. (Опционально) включите истечение срока через скрипт Google Apps Script, чтобы ссылки
-   были «одноразовыми».
-
-> Альтернатива: загружать файлы в S3‑совместимое хранилище (Selectel S3, VK Cloud Object Storage)
-> и выдавать **pre‑signed URL** на 24–72 часа. Это безопаснее, но требует настройки.
-
-## Шаг 6 — Аналитика
-
-- Подключите **Яндекс.Метрику** (бесплатно): добавьте счётчик в `BaseLayout.astro`,
-  включите Вебвизор, настройте цели:
-  - `click_buy` — клик на кнопку «Купить» (отслеживаем JS‑событием);
-  - `purchase_success` — переход на `/thanks/<slug>/` (URL‑цель);
-  - `freebie_optin` — отправка формы лид‑магнита.
-- Используйте UTM‑метки на всех внешних ссылках (TikTok, Instagram, Telegram).
-
-## Шаг 7 — Чек‑лист безопасности
-
-- [ ] `secretKey` ЮKassa **только** в переменных n8n, никогда в репозитории.
-- [ ] У n8n‑webhooks включён HMAC‑токен / Basic Auth → проверка в первом узле.
-- [ ] В оферту добавлены пункты про возврат и срок действия ссылки.
-- [ ] В политике конфиденциальности перечислены ЮKassa, n8n, Google как обработчики.
-- [ ] В формах есть чек‑бокс согласия на 152‑ФЗ и подписку (отдельным пунктом).
-- [ ] Включён лимит запросов на n8n‑webhook (100/мин) — защита от спама.
-
-## Что дальше
-
-- **Tripwire 290 ₽** — настройте «order bump» через дополнительную страницу `/upsell/<slug>/` с
-  отдельным n8n flow.
-- **Реактивация** — подключите рассылку (UniSender / Mailganer) к Google Sheets с продажами и
-  отправляйте письмо «прошёл месяц — оцените» через 30 дней.
-- **Telegram‑бот** — n8n умеет работать с Telegram Bot API; можно добавить альтернативную выдачу
-  файла прямо в Telegram через `/start <slug>`.
+Минус: нет автоматической выдачи файла — придётся отслеживать оплаты в кабинете ЮKassa и слать вручную, либо настраивать webhook ЮKassa напрямую на простой n8n‑узел из 2 нод (Webhook + Gmail).

@@ -66,7 +66,7 @@ const description =
 
     <!-- Pro-блок -->
     <div id="pro" class="mt-14 rounded-card bg-pattern-graphite p-6 text-paper md:p-10">
-      <span class="badge bg-pattern-lime text-ink">Pro · скоро</span>
+      <span class="badge bg-pattern-lime text-ink">Pro</span>
       <h2 class="mt-3 font-display text-3xl font-extrabold md:text-5xl">
         Хочешь больше — заберёшь Pro
       </h2>
@@ -76,25 +76,37 @@ const description =
         Excel‑таблица с автозаполнением — в подарок Pro‑подписчикам.
       </p>
       <div class="mt-6 grid gap-3 sm:grid-cols-3">
-        <div class="rounded-card bg-paper/10 p-4 backdrop-blur">
-          <div class="text-xs uppercase tracking-wider text-paper/60">Месяц</div>
+        <a
+          href={`${base}/contacts/?product=calc-pro-month`}
+          class="rounded-card bg-paper/10 p-4 backdrop-blur transition hover:bg-paper/15"
+        >
+          <div class="flex items-center justify-between">
+            <div class="text-xs uppercase tracking-wider text-paper/60">Месяц</div>
+            <span class="text-xs text-paper/50">скоро</span>
+          </div>
           <div class="mt-1 font-display text-2xl font-extrabold">490 ₽<span class="text-sm font-normal opacity-60">/мес</span></div>
-          <div class="mt-1 text-xs text-paper/60">Автосписание через ЮKassa</div>
-        </div>
-        <div class="rounded-card bg-pattern-lime p-4 text-ink">
+          <div class="mt-1 text-xs text-paper/60">Автосписание через ЮKassa, фаза 3</div>
+        </a>
+        <a
+          href={`${base}/products/calc-pro-year/`}
+          class="rounded-card bg-pattern-lime p-4 text-ink transition hover:opacity-90"
+        >
           <div class="text-xs uppercase tracking-wider text-ink-soft">Год — выгоднее</div>
           <div class="mt-1 font-display text-2xl font-extrabold">2 990 ₽<span class="text-sm font-normal opacity-60">/год</span></div>
-          <div class="mt-1 text-xs text-ink-soft">Разовый платёж, экономия 49%</div>
-        </div>
-        <div class="rounded-card bg-paper/10 p-4 backdrop-blur">
+          <div class="mt-1 text-xs text-ink-soft">Разовый платёж, экономия 49% · купить →</div>
+        </a>
+        <a
+          href={`${base}/products/calc-pro-lifetime/`}
+          class="rounded-card bg-paper/10 p-4 backdrop-blur transition hover:bg-paper/15"
+        >
           <div class="text-xs uppercase tracking-wider text-paper/60">Навсегда</div>
           <div class="mt-1 font-display text-2xl font-extrabold">9 900 ₽</div>
-          <div class="mt-1 text-xs text-paper/60">Lifetime + апдейты ставок</div>
-        </div>
+          <div class="mt-1 text-xs text-paper/60">Lifetime + апдейты ставок · купить →</div>
+        </a>
       </div>
       <p class="mt-4 text-xs text-paper/60">
-        Оплата подключается в фазе 2. Сейчас можно записаться в early access — напиши на
-        <a href={`${base}/contacts/`} class="underline">/contacts/</a>.
+        Годовой и lifetime оплачиваются разово через ЮKassa, доступ открывается сразу.
+        Месячная подписка с автосписанием — в фазе 3.
       </p>
     </div>
 
