@@ -4,7 +4,7 @@ export const SITE = {
     "Цифровые инструменты для самозанятых, ИП на услугах и продавцов на маркетплейсах",
   description:
     "Готовые шаблоны, чек‑листы и гайды без воды. Для тех, кто запускается на WB / Ozon и для тех, кто работает с клиентами как самозанятый или ИП.",
-  url: "https://artemida2.github.io/busines",
+  url: "https://delo-delai.ru",
   email: "hello@example.com",
   telegram: "https://t.me/your_channel",
   vk: "",

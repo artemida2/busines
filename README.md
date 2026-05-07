@@ -47,14 +47,14 @@ src/
 
 ```bash
 npm install
-npm run dev      # http://localhost:4321/busines/
+npm run dev      # http://localhost:4321/
 npm run build    # сборка в dist/
 npm run preview  # локальный просмотр build
 ```
 
-> На GitHub Pages сайт публикуется по адресу
-> `https://artemida2.github.io/busines/` — при добавлении кастомного домена
-> поменяйте `SITE_URL` и `BASE_PATH` в [astro.config.mjs](./astro.config.mjs)
+> Сайт деплоится на GitHub Pages под кастомным доменом
+> `https://delo-delai.ru/` (CNAME → artemida2.github.io). `SITE_URL` и
+> `BASE_PATH` задаются в [astro.config.mjs](./astro.config.mjs)
 > или прокиньте их через переменные окружения.
 
 ## Добавить новый продукт
@@ -101,4 +101,4 @@ paymentUrl: "https://yookassa.ru/your-link"
 
 1. **Settings → Pages → Build and deployment → Source: GitHub Actions**.
 2. Дождитесь успешного workflow.
-3. Откройте `https://artemida2.github.io/busines/`.
+3. Откройте `https://delo-delai.ru/`.

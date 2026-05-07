@@ -3,10 +3,11 @@ import tailwind from "@astrojs/tailwind";
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
 
-// Замените SITE_URL после привязки своего домена.
-// Пока сайт деплоится по адресу https://artemida2.github.io/busines/
-const SITE_URL = process.env.SITE_URL || "https://artemida2.github.io";
-const BASE_PATH = process.env.BASE_PATH || "/busines";
+// Сайт деплоится на кастомный домен https://delo-delai.ru/
+// (CNAME → artemida2.github.io). Если когда-то понадобится откатиться обратно
+// на github.io-поддомен — переопредели через переменные окружения.
+const SITE_URL = process.env.SITE_URL || "https://delo-delai.ru";
+const BASE_PATH = process.env.BASE_PATH || "/";
 
 // https://astro.build/config
 export default defineConfig({
