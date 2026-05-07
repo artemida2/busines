@@ -5,7 +5,7 @@ publishedAt: 2026-04-22
 track: "services"
 pattern: "sand"
 tags: ["налоги", "нпд", "самозанятый", "финансы"]
-relatedProducts: ["self-employed-checklist", "contract-template"]
+relatedProducts: ["self-employed-coreguide", "self-employed-finance"]
 ---
 
 Налог на профессиональный доход (НПД) — это «режим самозанятости» из приложения «Мой налог».
@@ -81,7 +81,7 @@ relatedProducts: ["self-employed-checklist", "contract-template"]
 
 ## Что почитать дальше
 
-- [Регистрация самозанятого за 1 час](/products/self-employed-checklist/) — пошаговый гайд
-  с скриншотами «Мой налог», в том числе про чеки и автосписание.
-- [Шаблон договора оказания услуг](/products/contract-template/) — корректно прописанный
-  договор с самозанятым избавляет клиента от риска переквалификации в трудовые отношения.
+- [Core‑гайд самозанятого: запуск и первые 10 клиентов](/products/self-employed-coreguide/) — пошаговый гайд
+  с скриншотами «Мой налог», договорами и работой с первыми клиентами.
+- [Финансовый учёт самозанятого](/products/self-employed-finance/) — Excel‑таблицы
+  для учёта доходов, налога НПД и отчётности перед банком.

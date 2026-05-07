@@ -5,7 +5,7 @@ publishedAt: 2026-05-05
 track: "marketplace"
 pattern: "sky"
 tags: ["wb", "стартап", "бюджет", "новички"]
-relatedProducts: ["wb-launch-30-days", "unit-economy-excel"]
+relatedProducts: ["wbozon-zero-to-100k", "unit-economy-excel"]
 ---
 
 Первая поисковая выдача по запросу «сколько денег нужно для запуска на WB» обещает «можно
@@ -86,5 +86,5 @@ relatedProducts: ["wb-launch-30-days", "unit-economy-excel"]
 
 - [Юнит‑экономика SKU](/products/unit-economy-excel/) — пересчитает бюджет с учётом ВСЕХ скрытых
   затрат за 10 минут.
-- [Запуск на WB за 30 дней](/products/wb-launch-30-days/) — пошаговый план, в каком порядке
+- [Core‑гайд: WB и Ozon с нуля до первой 100 000 ₽](/products/wbozon-zero-to-100k/) — пошаговый план, в каком порядке
   тратить деньги в первые 4 недели.

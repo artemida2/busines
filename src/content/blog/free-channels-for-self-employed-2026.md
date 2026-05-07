@@ -5,7 +5,7 @@ publishedAt: 2026-04-28
 track: "services"
 pattern: "mint"
 tags: ["клиенты", "трафик", "продвижение", "стартап"]
-relatedProducts: ["self-employed-checklist", "notion-crm-master"]
+relatedProducts: ["self-employed-coreguide", "services-marketplaces"]
 ---
 
 «Деньги нужны на материалы, на рекламу нет ни рубля» — самая частая стартовая ситуация
@@ -98,7 +98,7 @@ LinkedIn (если ниша B2B). Полезный ответ на чужой в
 
 ## Что почитать дальше
 
-- [Регистрация самозанятого за 1 час](/products/self-employed-checklist/) — без оформления
+- [Core‑гайд самозанятого: запуск и первые 10 клиентов](/products/self-employed-coreguide/) — без оформления
   даже бесплатные каналы рискованны (приходят жалобы и налоговая).
-- [CRM в Notion для мастера и фрилансера](/products/notion-crm-master/) — чтобы собирать
-  клиентов из всех каналов в одно место и не терять.
+- [Маркетплейсы услуг: Avito, Profi.ru, YouDo, Я.Услуги](/products/services-marketplaces/) — какую
+  площадку выбрать под ваш профиль и как получить первые заявки.

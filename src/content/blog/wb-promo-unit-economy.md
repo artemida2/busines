@@ -5,7 +5,7 @@ publishedAt: 2026-05-02
 track: "marketplace"
 pattern: "sand"
 tags: ["wb", "акции", "юнит-экономика", "ценообразование"]
-relatedProducts: ["unit-economy-excel", "wb-launch-30-days"]
+relatedProducts: ["unit-economy-excel", "wbozon-zero-to-100k"]
 ---
 
 «Вошли в акцию — увидели в кабинете минус 15% от маржи». Знакомая история. Главная причина —
@@ -79,5 +79,5 @@ relatedProducts: ["unit-economy-excel", "wb-launch-30-days"]
 
 - [Юнит‑экономика SKU для WB и Ozon — таблица Excel](/products/unit-economy-excel/) — закрывает все
   расчёты выше и ещё десяток сценариев.
-- [Запуск на Wildberries за 30 дней](/products/wb-launch-30-days/) — если вы только начинаете,
+- [Core‑гайд: WB и Ozon с нуля до первой 100 000 ₽](/products/wbozon-zero-to-100k/) — если вы только начинаете,
   с акциями лучше повременить и сначала собрать чистую финмодель.

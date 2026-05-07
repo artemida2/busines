@@ -15,18 +15,24 @@
       "name": "Webhook (from site)",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [200, -700],
+      "position": [
+        200,
+        -700
+      ],
       "webhookId": "delaydelo-create-payment"
     },
     {
       "parameters": {
-        "functionCode": "// === Каталог продуктов «Делай Дело» ===\n// ВАЖНО: цены ДОЛЖНЫ совпадать со значениями `price` в src/content/products/*.md\n// и Pro-тарифами на сайте калькулятора. Если меняешь цену — синхронно обнови оба места.\nconst CATALOG = {\n  'unit-economy-excel':      { title: 'Юнит-экономика SKU для WB и Ozon — таблица Excel',           price: 690 },\n  'wb-launch-30-days':       { title: 'Запуск на Wildberries за 30 дней — пошаговый гайд',          price: 990 },\n  'wb-card-templates':       { title: 'Шаблоны карточек WB: заголовок, описание, инфографика',      price: 590 },\n  'ozon-niche-matrix':       { title: 'Матрица ниш Ozon: 12 критериев и 200 идей',                  price: 790 },\n  'notion-crm-master':       { title: 'CRM в Notion для мастера и фрилансера',                      price: 690 },\n  'self-employed-checklist': { title: 'Регистрация самозанятого за 1 час — пошаговый гайд',         price: 490 },\n  'raise-price-scripts':     { title: 'Скрипты переписки: как поднять цену услуги без потери клиентов', price: 590 },\n  'contract-template':       { title: 'Шаблон договора оказания услуг для самозанятого',            price: 590 },\n  'calc-pro-year':           { title: 'Калькулятор юнит-экономики Pro — доступ на год',             price: 2990 },\n  'calc-pro-lifetime':       { title: 'Калькулятор юнит-экономики Pro — пожизненный доступ',        price: 9900 }\n};\n\n// Куда возвращать после оплаты. Поменяй на боевой домен при переезде с GitHub Pages.\nconst RETURN_URL = 'https://delo-delai.ru/thanks/';\nconst PROJECT_ID = 'delaydelo';\n\n// === Валидация входа: жёсткие whitelist-проверки ===\nconst body = (items[0].json && items[0].json.body) || items[0].json || {};\nconst project = (body.project || '').toString();\nconst slug = (body.guide_slug || '').toString();\nconst email = (body.email || '').toString().trim();\nconst idempotenceKey = (body.idempotence_key || '').toString().trim();\nconst sourceUrl = (body.source_url || '').toString().trim();\nconst priceCheck = Number(body.price_kopeks_check || 0);\n\n// 0) Этот воркфлоу обслуживает ТОЛЬКО проект delaydelo.\nif (project !== PROJECT_ID) {\n  throw new Error('Project mismatch: expected ' + PROJECT_ID + ', got ' + project);\n}\n\n// 1) slug — только из каталога\nif (!slug || !Object.prototype.hasOwnProperty.call(CATALOG, slug)) {\n  throw new Error('Unknown guide_slug: ' + slug);\n}\n\n// 2) email — узкий безопасный набор символов\nconst EMAIL_RE = /^[A-Za-z0-9._%+\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,}$/;\nif (!email || email.length > 254 || !EMAIL_RE.test(email)) {\n  throw new Error('Invalid email');\n}\n\n// 3) idempotence_key — UUID-подобная строка\nconst IDEMP_RE = /^[A-Za-z0-9._\\-]{8,128}$/;\nif (!IDEMP_RE.test(idempotenceKey)) {\n  throw new Error('Invalid idempotence_key');\n}\n\n// 4) source_url — http(s), без кавычек/обратных слэшей\nlet safeSourceUrl = '';\nif (sourceUrl) {\n  if (sourceUrl.length > 2048 || /[\"\\\\]/.test(sourceUrl) || !/^https?:\\/\\//.test(sourceUrl)) {\n    throw new Error('Invalid source_url');\n  }\n  safeSourceUrl = sourceUrl;\n}\n\nconst product = CATALOG[slug];\nconst priceValue = product.price.toFixed(2); // 'NNNN.00'\n\n// 5) Защита от подмены цены клиентом — если фронт прислал price_kopeks_check, он должен сходиться.\n// Несовпадение НЕ блокирует платёж (вдруг мы изменили цену в каталоге между сборкой и кликом),\n// но логируется в metadata, чтобы потом разобраться.\nlet priceMismatch = '';\nif (priceCheck && Math.abs(priceCheck - product.price * 100) > 0) {\n  priceMismatch = String(priceCheck);\n}\n\nconst paymentBody = {\n  amount: { value: priceValue, currency: 'RUB' },\n  capture: true,\n  confirmation: {\n    type: 'redirect',\n    return_url: RETURN_URL + slug + '/'\n  },\n  description: product.title,\n  metadata: {\n    project: PROJECT_ID,\n    guide_slug: slug,\n    email,\n    source_url: safeSourceUrl,\n    price_mismatch: priceMismatch\n  },\n  receipt: {\n    customer: { email },\n    items: [\n      {\n        description: product.title,\n        quantity: '1.00',\n        amount: { value: priceValue, currency: 'RUB' },\n        vat_code: 1,\n        payment_subject: 'service',\n        payment_mode: 'full_prepayment'\n      }\n    ]\n  }\n};\n\nreturn [{\n  json: {\n    idempotence_key: idempotenceKey,\n    payment_body: paymentBody\n  }\n}];"
+        "functionCode": "// === Каталог продуктов «Делай Дело» ===\n// ВАЖНО: цены ДОЛЖНЫ совпадать со значениями `price` в src/content/products/*.md\n// и Pro‑тарифами на сайте калькулятора. Если меняешь цену — синхронно обнови оба места.\nconst CATALOG = {\n  // Маркетплейсы\n  'unit-economy-excel':      { title: 'Юнит‑экономика SKU для WB и Ozon — калькулятор',           price: 690 },\n  'wbozon-zero-to-100k':     { title: 'Core‑гайд: WB и Ozon с нуля до первой 100 000 ₽ оборота',  price: 1490 },\n  'wb-ozon-card-seo':        { title: 'SEO карточек WB и Ozon: ключи, заголовки, описания',       price: 990 },\n  'wb-ozon-reviews':         { title: 'Управление отзывами WB и Ozon: шаблоны и сценарии',        price: 690 },\n  'wb-card-prompts':         { title: 'Промпт‑пак: AI‑описания карточек WB и Ozon',               price: 590 },\n  'china-suppliers':         { title: 'Поставщики из Китая для WB и Ozon',                        price: 990 },\n  'wb-internal-ads':         { title: 'Внутренняя реклама WB: настройка и оптимизация',           price: 990 },\n  'ozon-after-wb':           { title: 'Выход на Ozon после WB: что делать иначе',                 price: 690 },\n  'yandex-market-launch':    { title: 'Запуск на Яндекс.Маркете: пошаговый гайд',                 price: 690 },\n  // Самозанятые / ИП\n  'self-employed-coreguide': { title: 'Core‑гайд самозанятого: запуск и первые 10 клиентов',      price: 1290 },\n  'self-employed-finance':   { title: 'Финансовый учёт самозанятого',                             price: 690 },\n  'services-marketplaces':   { title: 'Маркетплейсы услуг: Avito, Profi.ru, YouDo, Я.Услуги',     price: 590 },\n  'raise-price-scripts':     { title: 'Скрипты переписки: как поднять цену услуги',               price: 590 },\n  'services-time-planning':  { title: 'Планирование времени и защита от выгорания для мастера',   price: 590 },\n  'services-targeted-ads':   { title: 'Таргет VK Ads и Яндекс.Директ для услуг',                  price: 990 },\n  'services-word-of-mouth':  { title: 'Сарафанное радио и система отзывов для самозанятого',      price: 490 },\n  // Pro‑тарифы калькулятора\n  'calc-pro-year':           { title: 'Калькулятор юнит‑экономики Pro — доступ на год',           price: 2990 },\n  'calc-pro-lifetime':       { title: 'Калькулятор юнит‑экономики Pro — пожизненный доступ',      price: 9900 }\n};\n\n// Куда возвращать после оплаты. Поменяй на боевой домен при переезде с GitHub Pages.\nconst RETURN_URL = 'https://delo-delai.ru/thanks/';\nconst PROJECT_ID = 'delaydelo';\n\n// === Валидация входа: жёсткие whitelist-проверки ===\nconst body = (items[0].json && items[0].json.body) || items[0].json || {};\nconst project = (body.project || '').toString();\nconst slug = (body.guide_slug || '').toString();\nconst email = (body.email || '').toString().trim();\nconst idempotenceKey = (body.idempotence_key || '').toString().trim();\nconst sourceUrl = (body.source_url || '').toString().trim();\nconst priceCheck = Number(body.price_kopeks_check || 0);\n\n// 0) Этот воркфлоу обслуживает ТОЛЬКО проект delaydelo.\nif (project !== PROJECT_ID) {\n  throw new Error('Project mismatch: expected ' + PROJECT_ID + ', got ' + project);\n}\n\n// 1) slug — только из каталога\nif (!slug || !Object.prototype.hasOwnProperty.call(CATALOG, slug)) {\n  throw new Error('Unknown guide_slug: ' + slug);\n}\n\n// 2) email — узкий безопасный набор символов\nconst EMAIL_RE = /^[A-Za-z0-9._%+\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,}$/;\nif (!email || email.length > 254 || !EMAIL_RE.test(email)) {\n  throw new Error('Invalid email');\n}\n\n// 3) idempotence_key — UUID-подобная строка\nconst IDEMP_RE = /^[A-Za-z0-9._\\-]{8,128}$/;\nif (!IDEMP_RE.test(idempotenceKey)) {\n  throw new Error('Invalid idempotence_key');\n}\n\n// 4) source_url — http(s), без кавычек/обратных слэшей\nlet safeSourceUrl = '';\nif (sourceUrl) {\n  if (sourceUrl.length > 2048 || /[\"\\\\]/.test(sourceUrl) || !/^https?:\\/\\//.test(sourceUrl)) {\n    throw new Error('Invalid source_url');\n  }\n  safeSourceUrl = sourceUrl;\n}\n\nconst product = CATALOG[slug];\nconst priceValue = product.price.toFixed(2); // 'NNNN.00'\n\n// 5) Защита от подмены цены клиентом — если фронт прислал price_kopeks_check, он должен сходиться.\n// Несовпадение НЕ блокирует платёж (вдруг мы изменили цену в каталоге между сборкой и кликом),\n// но логируется в metadata, чтобы потом разобраться.\nlet priceMismatch = '';\nif (priceCheck && Math.abs(priceCheck - product.price * 100) > 0) {\n  priceMismatch = String(priceCheck);\n}\n\nconst paymentBody = {\n  amount: { value: priceValue, currency: 'RUB' },\n  capture: true,\n  confirmation: {\n    type: 'redirect',\n    return_url: RETURN_URL + slug + '/'\n  },\n  description: product.title,\n  metadata: {\n    project: PROJECT_ID,\n    guide_slug: slug,\n    email,\n    source_url: safeSourceUrl,\n    price_mismatch: priceMismatch\n  },\n  receipt: {\n    customer: { email },\n    items: [\n      {\n        description: product.title,\n        quantity: '1.00',\n        amount: { value: priceValue, currency: 'RUB' },\n        vat_code: 1,\n        payment_subject: 'service',\n        payment_mode: 'full_prepayment'\n      }\n    ]\n  }\n};\n\nreturn [{\n  json: {\n    idempotence_key: idempotenceKey,\n    payment_body: paymentBody\n  }\n}];\n"
       },
       "id": "dd-cp-2",
       "name": "Validate + Map slug → product",
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
-      "position": [424, -700]
+      "position": [
+        424,
+        -700
+      ]
     },
     {
       "parameters": {
@@ -37,8 +43,14 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Content-Type", "value": "application/json" },
-            { "name": "Idempotence-Key", "value": "={{ $json.idempotence_key }}" }
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Idempotence-Key",
+              "value": "={{ $json.idempotence_key }}"
+            }
           ]
         },
         "sendBody": true,
@@ -56,7 +68,10 @@
       "name": "YooKassa: POST /v3/payments",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [664, -700],
+      "position": [
+        664,
+        -700
+      ],
       "credentials": {
         "httpBasicAuth": {
           "id": "REPLACE_WITH_YOUR_YOOKASSA_BASIC_AUTH_CRED_ID",
@@ -71,10 +86,22 @@
         "options": {
           "responseHeaders": {
             "entries": [
-              { "name": "Access-Control-Allow-Origin", "value": "https://delo-delai.ru" },
-              { "name": "Access-Control-Allow-Methods", "value": "POST, OPTIONS" },
-              { "name": "Access-Control-Allow-Headers", "value": "Content-Type" },
-              { "name": "Cache-Control", "value": "no-store" }
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "https://delo-delai.ru"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              }
             ]
           }
         }
@@ -83,20 +110,49 @@
       "name": "Respond to Site",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [904, -700]
+      "position": [
+        904,
+        -700
+      ]
     }
   ],
   "connections": {
     "Webhook (from site)": {
-      "main": [[{ "node": "Validate + Map slug → product", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Validate + Map slug → product",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Validate + Map slug → product": {
-      "main": [[{ "node": "YooKassa: POST /v3/payments", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "YooKassa: POST /v3/payments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "YooKassa: POST /v3/payments": {
-      "main": [[{ "node": "Respond to Site", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Respond to Site",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "pinData": {},
-  "meta": { "instanceId": "delaydelo" }
+  "meta": {
+    "instanceId": "delaydelo"
+  }
 }

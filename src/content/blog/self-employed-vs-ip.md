@@ -5,7 +5,7 @@ publishedAt: 2026-03-28
 track: "services"
 pattern: "lime"
 tags: ["налоги", "самозанятость", "ип"]
-relatedProducts: ["self-employed-checklist", "contract-template"]
+relatedProducts: ["self-employed-coreguide", "self-employed-finance"]
 ---
 
 Главный вопрос мастера на старте — оформиться самозанятым или сразу регистрировать ИП.
@@ -30,5 +30,5 @@ relatedProducts: ["self-employed-checklist", "contract-template"]
 - Хотите принимать оплату с расчётного счёта без ограничений.
 
 Если вы только начинаете — оформляйте самозанятость. У нас есть подробный
-[гайд «Регистрация за 1 час»](/products/self-employed-checklist/) и
-[шаблон договора](/products/contract-template/), чтобы сразу работать «по белому».
+[Core‑гайд самозанятого: запуск и первые 10 клиентов](/products/self-employed-coreguide/) с шаблонами договоров,
+и отдельный [Финансовый учёт самозанятого](/products/self-employed-finance/), чтобы сразу работать «по белому».

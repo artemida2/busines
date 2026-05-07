@@ -5,7 +5,7 @@ publishedAt: 2026-04-25
 track: "services"
 pattern: "graphite"
 tags: ["crm", "notion", "amocrm", "автоматизация"]
-relatedProducts: ["notion-crm-master"]
+relatedProducts: ["services-time-planning", "services-word-of-mouth"]
 ---
 
 Если вы один мастер или маленькая команда до 3 человек — amoCRM почти всегда избыточна.
@@ -25,7 +25,9 @@ relatedProducts: ["notion-crm-master"]
 - Автоматическая телефония и интеграция с мессенджерами.
 - Сквозная аналитика и атрибуция.
 
-## Что мы предлагаем
+## Что почитать дальше
 
-Готовый Notion‑шаблон [«CRM мастера»](/products/notion-crm-master/) — закрывает 90% задач
-самозанятого и стоит 690 ₽ один раз, а не 1 500 ₽ в месяц.
+- [Планирование времени и защита от выгорания для мастера](/products/services-time-planning/) — шаблоны
+  расписаний и правила записи, которые ставят процесс на рельсы без сложной CRM.
+- [Сарафанное радио и система отзывов](/products/services-word-of-mouth/) — большинство задач CRM
+  у самозанятого решается простыми правилами клиентского пути.

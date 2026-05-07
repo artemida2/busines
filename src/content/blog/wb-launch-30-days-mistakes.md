@@ -5,7 +5,7 @@ publishedAt: 2026-04-12
 track: "marketplace"
 pattern: "sky"
 tags: ["wb", "новички", "ошибки"]
-relatedProducts: ["wb-launch-30-days", "unit-economy-excel"]
+relatedProducts: ["wbozon-zero-to-100k", "unit-economy-excel"]
 ---
 
 Если коротко — большинство ошибок происходят не из‑за плохой ниши, а из‑за того, что
@@ -40,4 +40,4 @@ relatedProducts: ["wb-launch-30-days", "unit-economy-excel"]
 
 ---
 
-Если хотите всё это пройти по чек‑листу — у нас есть [гайд «Запуск на WB за 30 дней»](/products/wb-launch-30-days/).
+Если хотите всё это пройти по чек‑листу — у нас есть [Core‑гайд «WB и Ozon с нуля до первой 100к оборота»](/products/wbozon-zero-to-100k/).

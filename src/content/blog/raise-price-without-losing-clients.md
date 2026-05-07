@@ -5,7 +5,7 @@ publishedAt: 2026-05-01
 track: "services"
 pattern: "lime"
 tags: ["клиенты", "цены", "переписка", "переговоры"]
-relatedProducts: ["raise-price-scripts", "contract-template"]
+relatedProducts: ["raise-price-scripts", "self-employed-coreguide"]
 ---
 
 Самозанятый поднимает цену в среднем раз в 14 месяцев. И почти каждый раз это «событие» —
@@ -77,5 +77,5 @@ relatedProducts: ["raise-price-scripts", "contract-template"]
 
 - [Скрипты переписки: как поднять цену без потери клиентов](/products/raise-price-scripts/) —
   12 готовых сообщений на разные ситуации, включая «клиент попросил скидку перед записью».
-- [Шаблон договора оказания услуг](/products/contract-template/) — если в договоре прописано
-  «цена может пересматриваться раз в 12 месяцев», вопросов «а можно ли поднимать?» не возникает.
+- [Core‑гайд самозанятого: запуск и первые 10 клиентов](/products/self-employed-coreguide/) — внутри
+  раздел про договор и работу с клиентами без проблем (включая регулярный пересмотр цены).
