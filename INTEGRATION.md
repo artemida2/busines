@@ -121,28 +121,36 @@
 > { "body": { "event": "payment.succeeded", "object": { "id": "test-001", "amount": { "value": "2990.00", "currency": "RUB" }, "metadata": { "project": "delaydelo", "guide_slug": "unit-economy-excel", "email": "you@example.com" }, "receipt": { "customer": { "email": "you@example.com" } } } } }
 > ```
 
-## Шаг 3 — Загрузить файлы продуктов в Google Drive и проставить fileId
+## Шаг 3 — Каталог продуктов
 
-В рецепте `n8n/delaydelo-yukassa-receiver.json` есть карта `MAP` — в ней
-для каждого slug указан `deliveryType` и либо `fileId` (для file), либо `shareUrl` (для link).
-Замените все `REPLACE_FILE_ID_*` и `REPLACE_*_URL` на реальные значения.
+В рецепте `n8n/delaydelo-yukassa-receiver.json` в карте `MAP` уже проставлены
+fileId из Drive для 16 платных продуктов. 2 Pro‑тарифа идут через `deliveryType: 'link'`
+и ведут на страницу активации (пока заглушка `https://delo-delai.ru/pro-access/`).
 
-| Slug | Тип | Что подставить |
-|---|---|---|
-| `unit-economy-excel` | file | fileId .xlsx из Drive |
-| `wb-launch-30-days` | file | fileId .pdf из Drive |
-| `wb-card-templates` | file | fileId .zip с шаблонами |
-| `self-employed-checklist` | file | fileId .pdf |
-| `raise-price-scripts` | file | fileId .pdf |
-| `contract-template` | file | fileId .zip с .docx + инструкцией |
-| `ozon-niche-matrix` | link | URL копии Google Sheets (`/copy` ссылка) |
-| `notion-crm-master` | link | URL Notion-страницы с кнопкой Duplicate |
-| `calc-pro-year` | link | URL страницы активации Pro (пока заглушка) |
-| `calc-pro-lifetime` | link | URL страницы активации Pro (пока заглушка) |
+| Slug | Тип | Цена |
+|---|---|---:|
+| `unit-economy-excel` | file (.zip) | 690 ₽ |
+| `wbozon-zero-to-100k` | file (.pdf) | 1 490 ₽ |
+| `wb-ozon-card-seo` | file (.zip) | 990 ₽ |
+| `wb-ozon-reviews` | file (.zip) | 690 ₽ |
+| `wb-card-prompts` | file (.pdf) | 590 ₽ |
+| `china-suppliers` | file (.pdf) | 990 ₽ |
+| `wb-internal-ads` | file (.pdf) | 990 ₽ |
+| `ozon-after-wb` | file (.pdf) | 690 ₽ |
+| `yandex-market-launch` | file (.pdf) | 690 ₽ |
+| `self-employed-coreguide` | file (.pdf) | 1 290 ₽ |
+| `self-employed-finance` | file (.zip) | 690 ₽ |
+| `services-marketplaces` | file (.pdf) | 590 ₽ |
+| `raise-price-scripts` | file (.pdf) | 590 ₽ |
+| `services-time-planning` | file (.pdf) | 590 ₽ |
+| `services-targeted-ads` | file (.pdf) | 990 ₽ |
+| `services-word-of-mouth` | file (.pdf) | 490 ₽ |
+| `calc-pro-year` | link | 2 990 ₽ |
+| `calc-pro-lifetime` | link | 9 900 ₽ |
 
-**Как получить fileId Google Drive:** откройте файл → правый клик → «Поделиться» → «Скопировать ссылку». В URL вида `https://drive.google.com/file/d/AAAAA-BBBBB/view?usp=sharing` идентификатор — `AAAAA-BBBBB`.
+**Как получить fileId Google Drive (если появится новый продукт):** откройте файл → правый клик → «Поделиться» → «Скопировать ссылку». В URL вида `https://drive.google.com/file/d/AAAAA-BBBBB/view?usp=sharing` идентификатор — `AAAAA-BBBBB`.
 
-> **Доступ.** Файл должен быть доступен сервисному аккаунту/OAuth, который вы привязали к Drive‑credential в n8n. Сам публичный доступ файла включать НЕ нужно — n8n скачивает файл от своего имени.
+> **Доступ.** Файлы должны быть доступны сервисному аккаунту/OAuth, который вы привязали к Drive‑credential в n8n. Публичный доступ файла включать НЕ нужно — n8n скачивает файл от своего имени.
 
 ## Шаг 4 — Настроить сайт
 
@@ -170,7 +178,7 @@ export const PAYMENTS = {
 
 ## Шаг 5 — Проверка end‑to‑end
 
-1. На сайте откройте любой продукт, например `/products/unit-economy-excel/`.
+1. На сайте откройте любой продукт, например `/products/wbozon-zero-to-100k/`.
 2. Введите свой e‑mail, поставьте чекбокс согласия с офертой, нажмите «Перейти к оплате».
 3. Должен открыться чекаут ЮKassa в режиме `test` (если в shop включён test mode).
 4. Оплатите тестовой картой (`5555 5555 5555 4477`).

@@ -1,10 +1,10 @@
 ---
-title: "Юнит‑экономика SKU для WB и Ozon — таблица Excel"
+title: "Юнит‑экономика SKU для WB и Ozon — калькулятор"
 track: "marketplace"
 pattern: "graphite"
-summary: "Готовая таблица для расчёта прибыльности каждого товара с учётом всех комиссий, логистики, возвратов и налогов."
+summary: "Готовый набор Excel‑таблиц для расчёта прибыльности SKU с учётом всех комиссий, логистики, возвратов и налогов."
 price: 690
-format: "Excel"
+format: "Bundle"
 featured: true
 publishedAt: 2025-09-10
 tags: ["wb", "ozon", "финансы"]
