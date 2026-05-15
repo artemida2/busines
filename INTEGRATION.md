@@ -98,22 +98,25 @@
 ## Шаг 3 — Каталог продуктов
 
 В рецепте `n8n/delaydelo-yukassa-receiver.json` в карте `MAP` уже проставлены
-fileId из Drive для 16 платных продуктов. 2 Pro‑тарифа идут через `deliveryType: 'link'`
-и ведут на страницу активации (пока заглушка `https://delo-delai.ru/pro-access/`).
+fileId из Drive для 12 продуктов (`deliveryType: 'file'`, файл идёт вложением)
+и `shareUrl` Drive для 4 продуктов с `.zip` (`deliveryType: 'link'` — Gmail режет zip‑вложения,
+поэтому отправляем «Anyone with the link» Drive‑ссылку, по которой покупатель скачивает архив сам).
+2 Pro‑тарифа тоже идут через `deliveryType: 'link'` и ведут на страницу активации
+(пока заглушка `https://delo-delai.ru/pro-access/`).
 
 | Slug | Тип | Цена |
 |---|---|---:|
-| `unit-economy-excel` | file (.zip) | 690 ₽ |
+| `unit-economy-excel` | link (Drive .zip share) | 690 ₽ |
 | `wbozon-zero-to-100k` | file (.pdf) | 1 490 ₽ |
-| `wb-ozon-card-seo` | file (.zip) | 990 ₽ |
-| `wb-ozon-reviews` | file (.zip) | 690 ₽ |
+| `wb-ozon-card-seo` | link (Drive .zip share) | 990 ₽ |
+| `wb-ozon-reviews` | link (Drive .zip share) | 690 ₽ |
 | `wb-card-prompts` | file (.pdf) | 590 ₽ |
 | `china-suppliers` | file (.pdf) | 990 ₽ |
 | `wb-internal-ads` | file (.pdf) | 990 ₽ |
 | `ozon-after-wb` | file (.pdf) | 690 ₽ |
 | `yandex-market-launch` | file (.pdf) | 690 ₽ |
 | `self-employed-coreguide` | file (.pdf) | 1 290 ₽ |
-| `self-employed-finance` | file (.zip) | 690 ₽ |
+| `self-employed-finance` | link (Drive .zip share) | 690 ₽ |
 | `services-marketplaces` | file (.pdf) | 590 ₽ |
 | `raise-price-scripts` | file (.pdf) | 590 ₽ |
 | `services-time-planning` | file (.pdf) | 590 ₽ |
