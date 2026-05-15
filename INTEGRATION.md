@@ -35,7 +35,7 @@
         │  7) IF event === "payment.succeeded" → Resolve slug → delivery.
         │  8) ветвление по deliveryType:
         │      • file → Google Drive download → Gmail с вложением
-        │      • link → Gmail с ссылкой (Pro доступ)
+        │      • link → Gmail с ссылкой на Drive .zip
         ▼
 [Покупатель: получает файл/ссылку и чек 54‑ФЗ от ЮKassa]
 ```
@@ -101,8 +101,7 @@
 fileId из Drive для 12 продуктов (`deliveryType: 'file'`, файл идёт вложением)
 и `shareUrl` Drive для 4 продуктов с `.zip` (`deliveryType: 'link'` — Gmail режет zip‑вложения,
 поэтому отправляем «Anyone with the link» Drive‑ссылку, по которой покупатель скачивает архив сам).
-2 Pro‑тарифа тоже идут через `deliveryType: 'link'` и ведут на страницу активации
-(пока заглушка `https://delo-delai.ru/pro-access/`).
+Итого 16 продуктов = 12 файлов + 4 ссылки. Pro‑тарифы калькулятора не реализованы и в каталоге не присутствуют.
 
 | Slug | Тип | Цена |
 |---|---|---:|
@@ -122,8 +121,6 @@ fileId из Drive для 12 продуктов (`deliveryType: 'file'`, файл
 | `services-time-planning` | file (.pdf) | 590 ₽ |
 | `services-targeted-ads` | file (.pdf) | 990 ₽ |
 | `services-word-of-mouth` | file (.pdf) | 490 ₽ |
-| `calc-pro-year` | link | 2 990 ₽ |
-| `calc-pro-lifetime` | link | 9 900 ₽ |
 
 **Как получить fileId Google Drive (если появится новый продукт):** откройте файл → правый клик → «Поделиться» → «Скопировать ссылку». В URL вида `https://drive.google.com/file/d/AAAAA-BBBBB/view?usp=sharing` идентификатор — `AAAAA-BBBBB`.
 
@@ -175,7 +172,6 @@ export const PAYMENTS = {
 
 ## Что НЕ делает эта Phase 1‑интеграция
 
-- **Не делает рекуррент** (автосписания каждый месяц для Pro 490 ₽). Это отдельный workflow с `save_payment_method=true` и cron‑узлом, добавим в Phase 3.
 - **Не записывает продажи в Google Sheets / Airtable.** При желании — добавьте в receiver workflow ещё один узел Google Sheets append после Gmail.
 - **Не отправляет напоминание о возврате**, если письмо ушло в спам. На входе в Phase 2 можно прикрутить `Wait 30m → IF email_open == false → resend`.
 
