@@ -75,9 +75,10 @@ const freebies = defineCollection({
     pattern: productPattern.default("mint"),
     format: productFormat,
     pages: z.number().int().positive().optional(),
-    // Ссылка на форму подписки (n8n webhook / Tally / Telegram-бот),
-    // куда уходит email и срабатывает автодоставка.
+    // Ссылка на форму подписки (n8n webhook / Tally),
+    // куда позже будет уходить email для сохранения в базу.
     optinUrl: z.string().url().optional(),
+    downloadUrl: z.string().optional(),
   }),
 });
 
