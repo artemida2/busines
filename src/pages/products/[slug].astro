@@ -20,6 +20,7 @@ const data = entry.data;
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const trackTitle = TRACKS[data.track].title;
 const trackHref = `${base}/${TRACKS[data.track].slug}/`;
+const previewHref = data.previewUrl ? `${base}${data.previewUrl}` : "";
 
 const others = (
   await getCollection("products", ({ data: d, slug }) => d.track === data.track && slug !== entry.slug)
@@ -94,6 +95,30 @@ const others = (
       </aside>
     </div>
   </section>
+
+  {data.previewUrl && (
+    <section class="container-wide py-12 md:py-16">
+      <div class="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div>
+          <span class="badge">PDF preview</span>
+          <h2 class="mt-3">Предпросмотр продукта</h2>
+          <p class="mt-2 max-w-2xl text-ink-muted">
+            Откройте первые страницы перед покупкой: так видно структуру, стиль и уровень детализации материала.
+          </p>
+        </div>
+        <a class="btn-ghost" href={previewHref} target="_blank" rel="noopener">
+          Открыть PDF →
+        </a>
+      </div>
+      <div class="overflow-hidden rounded-card border border-ink/10 bg-paper shadow-card">
+        <iframe
+          class="h-[520px] w-full bg-white md:h-[720px]"
+          src={previewHref}
+          title={`Предпросмотр: ${data.title}`}
+        ></iframe>
+      </div>
+    </section>
+  )}
 
   <!-- Кому подойдёт / что внутри -->
   <section class="container-wide py-12 md:py-16">
