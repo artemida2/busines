@@ -35,6 +35,7 @@ const products = defineCollection({
     currency: z.literal("RUB").default("RUB"),
     format: productFormat,
     pages: z.number().int().positive().optional(),
+    previewUrl: z.string().optional(),
     bullets: z.array(z.string()).default([]),
     forWhom: z.array(z.string()).default([]),
     inside: z.array(z.string()).default([]),
