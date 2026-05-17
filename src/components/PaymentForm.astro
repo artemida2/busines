@@ -29,7 +29,7 @@ const endpoint = paymentEndpoint();
   novalidate
 >
   <label class="block">
-    <span class="text-xs font-medium text-ink-muted">Email для доставки и чека</span>
+    <span class="text-xs font-medium text-ink-muted">Email для доставки</span>
     <input
       type="email"
       name="email"
@@ -68,8 +68,8 @@ const endpoint = paymentEndpoint();
   ></p>
 
   <p class="text-[11px] leading-snug text-ink-muted">
-    Оплата картой или СБП через ЮKassa. Чек 54‑ФЗ автоматически. Файл придёт на указанный e‑mail
-    сразу после оплаты. Если письмо не пришло за 10 минут — напиши на
+    Оплата картой или СБП через ЮKassa. Файл придёт на указанный e‑mail
+    сразу после оплаты. Если письмо не пришло за 10 минут — напишите на
     <a href={`mailto:${PAYMENTS.supportEmail}`} class="underline hover:text-brand">
       {PAYMENTS.supportEmail}
     </a>.

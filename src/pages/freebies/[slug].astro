@@ -15,7 +15,8 @@ const { entry } = Astro.props;
 const { Content } = await entry.render();
 const data = entry.data;
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-const optinHref = data.optinUrl ?? `${base}/contacts/?freebie=${encodeURIComponent(entry.slug)}`;
+const downloadPageHref = `${base}/freebies/${entry.slug}/download/`;
+const hasDownload = Boolean(data.downloadUrl);
 ---
 
 <BaseLayout title={data.title} description={data.summary}>
@@ -48,11 +49,19 @@ const optinHref = data.optinUrl ?? `${base}/contacts/?freebie=${encodeURICompone
 
           <form
             class="rounded-card border border-ink/10 bg-paper p-6 shadow-card"
-            method="POST"
-            action={optinHref}
+            data-freebie-form
+            data-freebie-slug={entry.slug}
+            data-download-page={downloadPageHref}
+            data-has-download={hasDownload ? "true" : "false"}
+            data-optin-url={data.optinUrl ?? ""}
+            novalidate
           >
-            <div class="font-display text-xl font-bold">Получить на e‑mail</div>
-            <p class="mt-1 text-sm text-ink-muted">Отправим ссылку на скачивание сразу.</p>
+            <div class="font-display text-xl font-bold">{hasDownload ? "Получить документ" : "Материал готовится"}</div>
+            <p class="mt-1 text-sm text-ink-muted">
+              {hasDownload
+                ? "Введите e‑mail — сразу откроем страницу скачивания."
+                : "Оставьте e‑mail, чтобы получить уведомление, когда PDF появится."}
+            </p>
             <input type="hidden" name="freebie" value={entry.slug} />
             <label class="mt-4 block text-xs font-mono uppercase tracking-wider text-ink-muted">E‑mail</label>
             <input
@@ -63,10 +72,94 @@ const optinHref = data.optinUrl ?? `${base}/contacts/?freebie=${encodeURICompone
               <input required type="checkbox" name="consent" class="mt-0.5" />
               <span>Согласен с <a class="text-brand" href={`${base}/legal/privacy/`}>политикой</a> и подпиской на рассылку.</span>
             </label>
-            <button class="btn-money mt-5 w-full" type="submit">Отправить</button>
+            <button class="btn-money mt-5 w-full" type="submit" data-freebie-submit>
+              {hasDownload ? "Получить PDF" : "Оставить e‑mail"}
+            </button>
+            <p class="mt-3 hidden rounded-md bg-pattern-lime/60 p-3 text-xs text-ink" data-freebie-message role="status"></p>
           </form>
         </div>
       </aside>
     </div>
   </section>
 </BaseLayout>
+
+<script>
+  type FreebieLead = {
+    slug: string;
+    email: string;
+    createdAt: string;
+  };
+
+  const emailRe = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+  const showMessage = (box: HTMLElement | null, text: string, isError = false) => {
+    if (!box) return;
+    box.textContent = text;
+    box.classList.toggle("bg-pattern-coral/60", isError);
+    box.classList.toggle("bg-pattern-lime/60", !isError);
+    box.classList.remove("hidden");
+  };
+
+  const saveLeadDraft = (lead: FreebieLead) => {
+    try {
+      const key = "dd:freebieLeads";
+      const saved = JSON.parse(localStorage.getItem(key) || "[]");
+      const leads = Array.isArray(saved) ? saved : [];
+      leads.push(lead);
+      localStorage.setItem(key, JSON.stringify(leads.slice(-50)));
+      sessionStorage.setItem(`dd:freebieAccess:${lead.slug}`, lead.email);
+      window.dispatchEvent(new CustomEvent("dd:freebieLead", { detail: lead }));
+    } catch {}
+  };
+
+  document.querySelectorAll<HTMLFormElement>("[data-freebie-form]").forEach((form) => {
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const messageBox = form.querySelector<HTMLElement>("[data-freebie-message]");
+      const submit = form.querySelector<HTMLButtonElement>("[data-freebie-submit]");
+      const data = new FormData(form);
+      const email = (data.get("email") || "").toString().trim();
+      const consent = data.get("consent");
+      const slug = form.dataset.freebieSlug || "freebie";
+
+      if (!emailRe.test(email)) {
+        showMessage(messageBox, "Проверьте e‑mail: кажется, в нём опечатка.", true);
+        return;
+      }
+
+      if (!consent) {
+        showMessage(messageBox, "Чтобы продолжить, нужно согласие с политикой обработки данных.", true);
+        return;
+      }
+
+      const lead = { slug, email, createdAt: new Date().toISOString() };
+      const optinUrl = form.dataset.optinUrl || "";
+      const hasDownload = form.dataset.hasDownload === "true";
+      const downloadPage = form.dataset.downloadPage || "";
+
+      if (submit) submit.disabled = true;
+
+      if (optinUrl) {
+        try {
+          await fetch(optinUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(lead),
+            keepalive: true,
+          });
+        } catch {}
+      }
+
+      saveLeadDraft(lead);
+
+      if (hasDownload && downloadPage) {
+        window.location.href = downloadPage;
+        return;
+      }
+
+      showMessage(messageBox, "Спасибо! Сейчас материал в подготовке — как только он будет готов, добавим выдачу на эту страницу.");
+      if (submit) submit.disabled = false;
+    });
+  });
+</script>

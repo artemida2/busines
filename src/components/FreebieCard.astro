@@ -10,12 +10,13 @@ const { freebie } = Astro.props;
 const { data, slug } = freebie;
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const href = `${base}/freebies/${slug}/`;
+const isReady = Boolean(data.downloadUrl);
 ---
 
 <a href={href} class="group block focus:outline-none">
   <PatternBg pattern={data.pattern} class="group-hover:shadow-card">
     <div class="flex items-center justify-between gap-3">
-      <span class="badge bg-black/5 backdrop-blur">Бесплатно</span>
+      <span class="badge bg-black/5 backdrop-blur">{isReady ? "Бесплатно" : "Скоро"}</span>
       <span class="badge bg-black/5 backdrop-blur">{data.format}</span>
     </div>
 
@@ -27,7 +28,7 @@ const href = `${base}/freebies/${slug}/`;
     </div>
 
     <div class="mt-6 flex items-center justify-between">
-      <span class="text-sm font-medium">Скачать →</span>
+      <span class="text-sm font-medium">{isReady ? "Скачать →" : "Оставить e‑mail →"}</span>
       {data.pages ? (
         <span class="font-mono text-xs opacity-70">{data.pages} стр.</span>
       ) : null}

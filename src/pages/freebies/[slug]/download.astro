@@ -1,0 +1,82 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import PatternBg from "../../../components/PatternBg.astro";
+import { SITE } from "../../../lib/site";
+
+export async function getStaticPaths() {
+  const freebies = await getCollection("freebies");
+  return freebies.map((f) => ({
+    params: { slug: f.slug },
+    props: { entry: f },
+  }));
+}
+
+const { entry } = Astro.props;
+const data = entry.data;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const rawDownloadUrl = data.downloadUrl ?? "";
+const downloadHref = rawDownloadUrl.startsWith("http")
+  ? rawDownloadUrl
+  : rawDownloadUrl
+    ? `${base}${rawDownloadUrl.startsWith("/") ? rawDownloadUrl : `/${rawDownloadUrl}`}`
+    : "";
+const isReady = Boolean(downloadHref);
+---
+
+<BaseLayout title={`Скачать: ${data.title}`} description={data.summary} noindex>
+  <section class="container-wide pt-12 md:pt-16">
+    <nav class="mb-6 flex items-center gap-2 text-xs text-ink-muted">
+      <a class="hover:text-brand" href={`${base}/`}>Главная</a>
+      <span>/</span>
+      <a class="hover:text-brand" href={`${base}/freebies/`}>Бесплатно</a>
+      <span>/</span>
+      <a class="hover:text-brand" href={`${base}/freebies/${entry.slug}/`}>{data.title}</a>
+    </nav>
+
+    <div class="grid gap-8 md:grid-cols-12">
+      <div class="md:col-span-5">
+        <span class="badge-money">Бесплатный материал</span>
+        <h1 class="mt-3">{isReady ? "Документ готов" : "Материал готовится"}</h1>
+        <p class="mt-4 text-lg text-ink-muted">
+          {isReady
+            ? "Откройте PDF в браузере или скачайте файл на устройство."
+            : "PDF для этого материала пока не загружен. Как только файл будет готов, на этой странице появится скачивание."}
+        </p>
+
+        <div class="mt-6 flex flex-wrap gap-3">
+          {isReady ? (
+            <>
+              <a class="btn-money" href={downloadHref} download>Скачать PDF</a>
+              <a class="btn-ghost" href={downloadHref} target="_blank" rel="noreferrer">Открыть в новой вкладке</a>
+            </>
+          ) : (
+            <a class="btn-primary" href={`mailto:${SITE.email}?subject=${encodeURIComponent(`Бесплатный материал: ${data.title}`)}`}>
+              Написать на почту
+            </a>
+          )}
+        </div>
+      </div>
+
+      <div class="md:col-span-7">
+        {isReady ? (
+          <div class="overflow-hidden rounded-card border border-ink/10 bg-paper shadow-card">
+            <iframe
+              src={downloadHref}
+              title={data.title}
+              class="h-[70vh] w-full"
+              loading="lazy"
+            ></iframe>
+          </div>
+        ) : (
+          <PatternBg pattern={data.pattern} class="!min-h-[360px]">
+            <span class="badge bg-black/5">Скоро</span>
+            <div class="mt-auto font-display text-3xl font-extrabold leading-tight">
+              {data.title}
+            </div>
+          </PatternBg>
+        )}
+      </div>
+    </div>
+  </section>
+</BaseLayout>

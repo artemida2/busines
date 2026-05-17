@@ -5,11 +5,7 @@ export const SITE = {
   description:
     "Готовые шаблоны, чек‑листы и гайды без воды. Для тех, кто запускается на WB / Ozon и для тех, кто работает с клиентами как самозанятый или ИП.",
   url: "https://delo-delai.ru",
-  email: "hello@example.com",
-  telegram: "https://t.me/your_channel",
-  vk: "",
-  inn: "000000000000",
-  legalName: "ИП / Самозанятый «Делай Дело»",
+  email: "aiinformatorbot@gmail.com",
 } as const;
 
 /**
@@ -26,7 +22,7 @@ export const PAYMENTS = {
   /** Идентификатор проекта — кладём в metadata, чтобы единый n8n обслуживал несколько сайтов */
   projectId: "delaydelo",
   /** Контактный email для проблем с оплатой/доставкой (показываем в форме) */
-  supportEmail: "hello@example.com",
+  supportEmail: "aiinformatorbot@gmail.com",
 } as const;
 
 export const paymentEndpoint = (): string =>
